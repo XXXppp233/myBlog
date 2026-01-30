@@ -9,18 +9,29 @@ const showFullIp = ref(false)
 const fetchIpData = async () => {
   try {
     loading.value = true
-    // Using ipapi.co for rich data (IPv4/IPv6 detection included)
-    const response = await fetch('https://ipapi.co/json/')
+    // Using ip-api.com for rich data (HTTP only for free tier, but many environments allow it)
+    const response = await fetch('http://ip-api.com/json/')
     if (!response.ok) throw new Error('Failed to fetch IP data')
-    ipData.value = await response.json()
+    const data = await response.json()
+
+    if (data.status === 'fail') throw new Error(data.message)
+
+    // Mapping ip-api.com fields to our component's expected structure
+    ipData.value = {
+      ip: data.query,
+      country_name: data.country,
+      region: data.regionName,
+      city: data.city,
+      org: data.isp || data.org,
+    }
   } catch (err) {
     console.error(err)
     error.value = 'Unable to load IP info'
-    // Fallback to simple IP echo if rich API fails
+    // Fallback to https reliable API if ip-api fails (it often fails on https-only sites)
     try {
       const fallback = await fetch('https://api.ipify.org?format=json')
       const data = await fallback.json()
-      ipData.value = { ip: data.ip, city: 'Unknown', country_name: 'Unknown' } // Minimal data
+      ipData.value = { ip: data.ip, city: 'Unknown', country_name: 'Unknown' }
       error.value = null
     } catch (e) {
       // Full failure
@@ -97,9 +108,11 @@ const toggleVisibility = () => {
         </div>
       </div>
 
-      <div class="info-row" v-if="ipData.city">
+      <div class="info-row" v-if="ipData.country_name || ipData.region || ipData.city">
         <span class="label">Location</span>
-        <span class="value">{{ ipData.city }}, {{ ipData.country_name }}</span>
+        <span class="value">
+          {{ [ipData.country_name, ipData.region, ipData.city].filter(Boolean).join(', ') }}
+        </span>
       </div>
 
       <div class="info-row" v-if="ipData.org">
@@ -179,7 +192,7 @@ const toggleVisibility = () => {
 .value-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
 }
 
 .icon-btn {

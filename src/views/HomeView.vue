@@ -5,7 +5,7 @@ import IpInfoCard from '../components/IpInfoCard.vue'
 <template>
   <div class="home-container">
     <div class="welcome-banner">
-      <h1>Good morning, Developer</h1>
+      <h1>Good morning, Sir</h1>
       <p>Here's what's happening today in your workspace.</p>
     </div>
 
