@@ -22,6 +22,7 @@ const fetchIpData = async () => {
       country_name: data.country,
       region: data.region,
       city: data.city,
+      flag_emoji: data.flag?.emoji,
       org: data.connection?.isp || data.connection?.org,
     }
   } catch (err) {
@@ -93,31 +94,42 @@ const toggleVisibility = () => {
 
     <div class="card-content info-grid" v-else-if="ipData">
       <div class="info-row">
-        <span class="label">IP Address</span>
-        <div class="value-container">
-          <span class="value ip-address">
-            {{ showFullIp ? ipData.ip : getMaskedIp(ipData.ip) }}
-          </span>
+        <div class="label-row">
+          <span class="label">IP Address</span>
           <button
             @click="toggleVisibility"
-            class="icon-btn"
+            class="icon-btn action-icon"
             :title="showFullIp ? 'Hide IP' : 'Show IP'"
           >
             {{ showFullIp ? '👁️' : '🔒' }}
           </button>
         </div>
+        <div class="value-container">
+          <span class="value ip-address">
+            {{ showFullIp ? ipData.ip : getMaskedIp(ipData.ip) }}
+          </span>
+        </div>
       </div>
 
       <div class="info-row" v-if="ipData.country_name || ipData.region || ipData.city">
-        <span class="label">Location</span>
-        <span class="value">
-          {{ [ipData.country_name, ipData.region, ipData.city].filter(Boolean).join(', ') }}
-        </span>
+        <div class="label-row">
+          <span class="label">Location</span>
+          <span class="flag-icon" v-if="ipData.flag_emoji">{{ ipData.flag_emoji }}</span>
+        </div>
+        <div class="value-container">
+          <span class="value">
+            {{ [ipData.country_name, ipData.region, ipData.city].filter(Boolean).join(', ') }}
+          </span>
+        </div>
       </div>
 
       <div class="info-row" v-if="ipData.org">
-        <span class="label">ISP / Org</span>
-        <span class="value">{{ ipData.org }}</span>
+        <div class="label-row">
+          <span class="label">ISP / Org</span>
+        </div>
+        <div class="value-container">
+          <span class="value">{{ ipData.org }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -176,11 +188,24 @@ const toggleVisibility = () => {
   gap: 4px;
 }
 
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+
 .label {
-  font-size: 12px;
+  font-size: 11px;
   color: #605e5c;
   font-weight: 600;
   text-transform: uppercase;
+}
+
+.flag-icon {
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .value {
@@ -192,16 +217,20 @@ const toggleVisibility = () => {
 .value-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .icon-btn {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
-  font-size: 14px;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
   opacity: 0.6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0078d4;
 }
 
 .icon-btn:hover {
