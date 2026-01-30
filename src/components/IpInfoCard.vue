@@ -9,25 +9,25 @@ const showFullIp = ref(false)
 const fetchIpData = async () => {
   try {
     loading.value = true
-    // Using ip-api.com for rich data (HTTP only for free tier, but many environments allow it)
-    const response = await fetch('http://ip-api.com/json/')
+    // Using ipwho.is which supports HTTPS for free
+    const response = await fetch('https://ipwho.is/')
     if (!response.ok) throw new Error('Failed to fetch IP data')
     const data = await response.json()
 
-    if (data.status === 'fail') throw new Error(data.message)
+    if (!data.success) throw new Error(data.message)
 
-    // Mapping ip-api.com fields to our component's expected structure
+    // Mapping ipwho.is fields to our component's expected structure
     ipData.value = {
-      ip: data.query,
+      ip: data.ip,
       country_name: data.country,
-      region: data.regionName,
+      region: data.region,
       city: data.city,
-      org: data.isp || data.org,
+      org: data.connection?.isp || data.connection?.org,
     }
   } catch (err) {
     console.error(err)
     error.value = 'Unable to load IP info'
-    // Fallback to https reliable API if ip-api fails (it often fails on https-only sites)
+    // Fallback to basic API if rich API fails
     try {
       const fallback = await fetch('https://api.ipify.org?format=json')
       const data = await fallback.json()
