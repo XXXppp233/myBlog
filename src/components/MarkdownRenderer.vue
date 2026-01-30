@@ -75,4 +75,15 @@ const htmlContent = computed(() => {
   padding-left: 16px;
   color: #605e5c;
 }
+
+.markdown-body a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: border-bottom-color 0.2s ease-in-out;
+}
+
+.markdown-body a:hover {
+  border-bottom-color: #0078d4;
+}
 </style>

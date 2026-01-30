@@ -5,8 +5,28 @@ import { useNotes } from '../composables/useNotes'
 const { categories, getNotesByCategory } = useNotes()
 const selectedCategory = ref(null)
 
+// Sorting state
+const sortField = ref('date')
+const sortDirection = ref('desc')
+
+const sortNotes = (field) => {
+  if (sortField.value === field) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = field
+    sortDirection.value = field === 'date' ? 'desc' : 'asc'
+  }
+}
+
 const displayedNotes = computed(() => {
-  return getNotesByCategory(selectedCategory.value)
+  const notes = getNotesByCategory(selectedCategory.value)
+  return [...notes].sort((a, b) => {
+    let modifier = sortDirection.value === 'asc' ? 1 : -1
+    // Handle date comparison specially if needed, but string comparison works for ISO dates
+    if (a[sortField.value] < b[sortField.value]) return -1 * modifier
+    if (a[sortField.value] > b[sortField.value]) return 1 * modifier
+    return 0
+  })
 })
 
 const selectCategory = (category) => {
@@ -40,10 +60,37 @@ const selectCategory = (category) => {
 
     <div class="list-surface">
       <div class="list-header">
-        <div class="col-title">Name</div>
-        <div class="col-cat">Category</div>
-        <div class="col-date">Date Modified</div>
-        <div class="col-preview">Preview</div>
+        <div
+          class="col-title header-cell"
+          :class="{ active: sortField === 'title' }"
+          @click="sortNotes('title')"
+        >
+          Name
+          <span class="sort-icon" v-if="sortField === 'title'">{{
+            sortDirection === 'asc' ? '▲' : '▼'
+          }}</span>
+        </div>
+        <div
+          class="col-cat header-cell"
+          :class="{ active: sortField === 'category' }"
+          @click="sortNotes('category')"
+        >
+          Category
+          <span class="sort-icon" v-if="sortField === 'category'">{{
+            sortDirection === 'asc' ? '▲' : '▼'
+          }}</span>
+        </div>
+        <div
+          class="col-date header-cell"
+          :class="{ active: sortField === 'date' }"
+          @click="sortNotes('date')"
+        >
+          Date Modified
+          <span class="sort-icon" v-if="sortField === 'date'">{{
+            sortDirection === 'asc' ? '▲' : '▼'
+          }}</span>
+        </div>
+        <div class="col-preview header-cell">Preview</div>
       </div>
 
       <div class="list-body">
@@ -129,6 +176,44 @@ const selectCategory = (category) => {
   color: #605e5c;
   font-size: 14px;
 }
+
+.header-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.header-cell:hover {
+  color: #323130;
+}
+
+.header-cell .sort-icon {
+  font-size: 10px;
+  visibility: hidden; /* Default hidden */
+}
+
+/* Show icon only when hovering active header */
+.header-cell.active:hover .sort-icon {
+  visibility: visible;
+}
+
+/* Also show icon if it's strictly required to see current sort. 
+   But user said: "if not sorted by this rule, don't show".
+   And "hovering appears... to indicate current". 
+   If I interpret "indicate current" as "show me the state", then maybe it should be visible always for active?
+   But "hovering appears" implies it's gone otherwise.
+   
+   Alternative interpretation: 
+   - Not active: No icon.
+   - Active: Icon ONLY on hover.
+   
+   This matches the literal "hovering ... appears".
+   
+   Let's stick to: Icon hidden by default. 
+   If .header-cell.active:hover -> visible.
+*/
 
 .list-row {
   display: grid;
