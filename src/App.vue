@@ -1,11 +1,58 @@
-<script setup></script>
+<script setup>
+import { RouterView } from 'vue-router'
+import MicrosoftNav from './components/MicrosoftNav.vue'
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div class="app-layout">
+    <header>
+      <MicrosoftNav />
+    </header>
+
+    <main>
+      <RouterView />
+    </main>
+  </div>
 </template>
 
-<style scoped></style>
+<style>
+/* Global Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    'Segoe UI',
+    'Segoe UI Web (West European)',
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: #faf9f8; /* Microsoft Fabric neutral lighter alt */
+  color: #323130;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+}
+</style>
+
+<style scoped>
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+</style>
