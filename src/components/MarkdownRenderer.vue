@@ -9,10 +9,7 @@ const props = defineProps({
   },
 })
 
-// Custom renderer to handle Embed blocks and frontmatter stripping
-const renderer = new marked.Renderer()
-
-// Extension for ::: embed syntax
+// Modernized Renderer and Extensions for marked v17
 const embedExtension = {
   name: 'embed',
   level: 'block',
@@ -33,7 +30,6 @@ const embedExtension = {
   }
 };
 
-// Extension for ::: note/important/warning alerts
 const alertExtension = {
   name: 'alert',
   level: 'block',
@@ -60,7 +56,7 @@ const alertExtension = {
     };
     
     const config = variantMap[token.variant] || variantMap['note'];
-    // Use a clean marked instance for internal parsing to avoid recursion issues
+    // Parse it simply to avoid recursion issues
     const content = marked.parse(token.text);
     
     return `<div class="ms-alert alert-${token.variant === 'alert' ? 'alert' : token.variant}">
@@ -73,44 +69,45 @@ const alertExtension = {
   }
 };
 
-renderer.heading = function({ text, depth }) {
-  const id = String(text).toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-') 
-  return `<h${depth} id="${id}">${text}</h${depth}>`
-}
-
-// Override html renderer to escape raw HTML
-renderer.html = function({ text }) {
-  return text.replace(/&/g, '&amp;')
-             .replace(/</g, '&lt;')
-             .replace(/>/g, '&gt;')
-             .replace(/"/g, '&quot;')
-             .replace(/'/g, '&#39;');
-}
-
-renderer.code = function({ text, lang }) {
-  // Default code block rendering
-  const escaped = text.replace(/&/g, '&amp;')
-                      .replace(/</g, '&lt;')
-                      .replace(/>/g, '&gt;')
-                      .replace(/"/g, '&quot;')
-                      .replace(/'/g, '&#39;');
-  return `<div class="code-container"><p class="code-lang">${lang || 'Text'}</p><pre><code class="language-${lang || ''}">${escaped}</code></pre></div>`;
-}
-
 // Global Marked Configuration
 marked.use({ 
-  renderer,
-  extensions: [embedExtension, alertExtension]
+  renderer: {
+    heading(token) {
+      const text = token.text;
+      const depth = token.depth;
+      const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
+      // In v17+, token has tokens property for children, but we can use the text for basic headings
+      return `<h${depth} id="${id}">${this.parser.parseInline(token.tokens)}</h${depth}>`;
+    },
+    code(token) {
+      const { text, lang } = token;
+      const escaped = text.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+      return `<div class="code-container"><p class="code-lang">${lang || 'Text'}</p><pre><code class="language-${lang || ''}">${escaped}</code></pre></div>`;
+    }
+  },
+  extensions: [embedExtension, alertExtension],
+  async: false,
+  breaks: true,
+  gfm: true
 })
 
 const htmlContent = computed(() => {
+  if (!props.content) return ''
+  
   // 1. Strip frontmatter first
-  let content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')
+  let content = props.content.replace(/^---[\s\S]*?---\n/, '')
   
   // 2. Remove the first H1 tag to avoid double titles
   content = content.replace(/^#\s+.*(?:\n|$)/, '')
 
-  return marked(content)
+  try {
+    return marked.parse(content)
+  } catch (err) {
+    console.error('Marked parsing error:', err)
+    return '<p class="error">Error rendering markdown</p>'
+  }
 })
 </script>
 

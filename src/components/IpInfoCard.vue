@@ -16,6 +16,12 @@ const fetchIpData = async () => {
 
     if (!data.success) throw new Error(data.message)
 
+    // Store country code for other components to use (e.g., Holiday Calendar)
+    if (data.country_code) {
+      localStorage.setItem('user_country_code', data.country_code)
+      window.dispatchEvent(new CustomEvent('country-code-ready', { detail: data.country_code }))
+    }
+
     // Mapping ipwho.is fields to our component's expected structure
     ipData.value = {
       ip: data.ip,
@@ -78,7 +84,7 @@ const toggleVisibility = () => {
 </script>
 
 <template>
-  <div class="ms-card client-info-card">
+  <div class="ms-card client-info-card h-full">
     <div class="card-header">
       <h3>Client Info</h3>
       <button @click="fetchIpData" class="refresh-btn" title="Refresh">↻</button>
@@ -148,10 +154,15 @@ const toggleVisibility = () => {
   transition: box-shadow 0.2s;
 }
 
+.client-info-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .client-info-card:hover {
   box-shadow:
-    0 6.4px 14.4px rgba(0, 0, 0, 0.13),
-    0 1.2px 3.6px rgba(0, 0, 0, 0.11);
+    0 4px 12px rgba(0, 0, 0, 0.08); /* Unified hover */
 }
 
 .card-header {
@@ -162,17 +173,22 @@ const toggleVisibility = () => {
 }
 
 .card-header h3 {
-  font-size: 18px;
+  font-size: 13px; /* Unified header font size */
   font-weight: 600;
   margin: 0;
-  color: #201f1e;
+  color: #605e5c;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding-left: 12px;
+  border-left: 3px solid #0078d4;
+  line-height: 1;
 }
 
 .refresh-btn {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   color: #0078d4;
 }
 
@@ -180,6 +196,7 @@ const toggleVisibility = () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1; /* Allow content to grow but card remains flex */
 }
 
 .info-row {

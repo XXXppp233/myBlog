@@ -1,20 +1,42 @@
 <script setup>
 import { useRoute } from 'vue-router'
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import { useNotes } from '../composables/useNotes'
 
 const route = useRoute()
 const { getNoteById, fetchNoteContent, isLoading, notes } = useNotes()
 
-const noteSlug = route.params.slug
-const slugStr = Array.isArray(noteSlug) ? noteSlug.join('/') : noteSlug
-const note = computed(() => getNoteById(slugStr))
+const noteSlug = computed(() => route.params.slug)
+const slugStr = computed(() => Array.isArray(noteSlug.value) ? noteSlug.value.join('/') : noteSlug.value)
+const note = computed(() => getNoteById(slugStr.value))
 
 // Sidebar: Related notes in same category
 const relatedNotes = computed(() => {
   if (!note.value) return []
   return notes.value.filter(n => n.category === note.value.category)
+})
+
+const activeId = ref('')
+const handleScroll = () => {
+  const sections = toc.value.map(item => document.getElementById(item.id))
+  const scrollPos = window.scrollY + 100
+
+  for (let i = sections.length - 1; i >= 0; i--) {
+    const section = sections[i]
+    if (section && scrollPos >= section.offsetTop) {
+      activeId.value = toc.value[i].id
+      break
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 
 // TOC Generation
@@ -134,7 +156,8 @@ const readingTime = computed(() => {
         <div class="toc-wrapper">
           <h3 class="toc-title">In this article</h3>
           <ul class="toc-list" v-if="toc.length">
-            <li v-for="item in toc" :key="item.id" :class="['toc-item', `level-${item.level}`]">
+            <li v-for="item in toc" :key="item.id" 
+                :class="['toc-item', `level-${item.level}`, { active: activeId === item.id }]">
               <a href="#" @click.prevent="scrollToHeader(item.id)">{{ item.text }}</a>
             </li>
           </ul>
@@ -386,7 +409,14 @@ const readingTime = computed(() => {
 }
 
 .toc-item a:hover {
-  color: #242424;
+  color: #0078d4;
+  background-color: #f3f2f1;
+}
+
+.toc-item.active a {
+  color: #0078d4;
+  border-left-color: #0078d4;
+  font-weight: 600;
 }
 
 .level-3 {
