@@ -151,6 +151,7 @@ const toggleVisibility = () => {
   margin-bottom: 12px;
   border-bottom: 1px solid #e0e0e0;
   padding-bottom: 8px;
+  flex-wrap: nowrap; /* Prevent wrapping */
 }
 
 .cf-text-label {
@@ -158,6 +159,7 @@ const toggleVisibility = () => {
   font-weight: 600;
   color: #333;
   margin: 0;
+  white-space: nowrap; /* Keep label on one line */
 }
 
 .refresh-btn {
@@ -165,8 +167,13 @@ const toggleVisibility = () => {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: #F38020; /* Cloudflare Orange */
+  color: #F38020;
   transition: transform 0.3s ease;
+  flex-shrink: 0; /* Prevent button from shrinking/wrapping */
+  padding: 0 4px; /* Minimal padding */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .refresh-btn:hover {

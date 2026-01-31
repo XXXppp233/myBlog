@@ -5,154 +5,225 @@ import CloudflareVerification from '../components/CloudflareVerification.vue'
 
 <template>
   <div class="home-container">
-    <section class="hero">
-      <div class="hero-content">
-        <h1>Building a Better Blog</h1>
-        <p class="subtitle">Secure, fast, and reliable knowledge sharing.</p>
-        <div class="cta-group">
-          <router-link to="/notes" class="btn btn-primary">Start Reading</router-link>
-          <router-link to="/notes/cloudflare/deploy-pages" class="btn btn-secondary">Documentation</router-link>
+    <div class="content-wrapper">
+      <section class="hero-section">
+        <div class="hero-icon-wrapper">
+          <svg viewBox="0 0 48 48" height="64" width="64" class="product-icon"><path d="M33.6,18.9c-1.3-4.1-5-7.1-9.5-7.1c-4.4,0-8.2,3-9.5,7.1c-1.6,0.3-3,1.3-3.7,2.8c-2,0.4-3.5,2.1-3.5,4.2c0,2.4,1.8,4.3,4.2,4.3h24.8c2.4,0,4.2-1.9,4.2-4.3c0-2-1.5-3.8-3.5-4.2C36.6,20.2,35.2,19.2,33.6,18.9z" fill="#F38020"></path></svg>
         </div>
-      </div>
-    </section>
-    
-    <section class="features">
-      <div class="feature-card ip-card-container">
-        <h3>Your IP Info</h3>
-        <IpInfoCard />
-      </div>
-      <div class="feature-card">
-        <h3>Quick Start</h3>
-        <p>Get up and running in seconds with our optimized templates and guides.</p>
-        <div class="quick-links">
-          <router-link to="/notes" class="link-arrow">Browse Notes &rarr;</router-link>
+        <h1 class="product-title">My Blog</h1>
+        <p class="product-description">
+          A serverless developer platform for personal notes, ideas, and testing. <br>
+          Built on Cloudflare Pages, powered by Vue 3.
+        </p>
+        <div class="hero-actions">
+          <router-link to="/notes" class="btn btn-primary">Start reading</router-link>
+          <a href="https://github.com/XXXppp233/myBlog" target="_blank" class="btn btn-secondary">View on GitHub</a>
         </div>
-      </div>
-      <div class="feature-card">
-        <h3>Verification</h3>
-        <p>Cloudflare believes you are human. Access granted with zero friction.</p>
-        <div class="verification-wrapper">
-          <CloudflareVerification />
+      </section>
+      
+      <section class="grid-section">
+        <h2 class="section-title">Features</h2>
+        <div class="card-grid">
+          <!-- IP Info Card - Custom Interactive Component -->
+          <div class="doc-card interactive-card">
+            <h3 class="card-title">Client Identification</h3>
+            <p class="card-desc">Identify and verify client connection details securely.</p>
+            <div class="card-slot">
+              <IpInfoCard />
+            </div>
+          </div>
+
+          <!-- Quick Start Card -->
+          <router-link to="/notes" class="doc-card link-card">
+            <h3 class="card-title">Docs & Notes</h3>
+            <p class="card-desc">Browse through categorized markdown notes and technical documentation.</p>
+            <span class="card-link-text">Browse notes &rarr;</span>
+          </router-link>
+
+          <!-- Verification Card -->
+          <div class="doc-card interactive-card">
+            <h3 class="card-title">Security Check</h3>
+            <p class="card-desc">Turnstile-inspired verification challenge.</p>
+            <div class="card-slot center-slot">
+              <CloudflareVerification />
+            </div>
+          </div>
+
+           <!-- Deploy Guide -->
+           <router-link to="/notes/cloudflare/deploy-pages" class="doc-card link-card">
+            <h3 class="card-title">Deployment Guide</h3>
+            <p class="card-desc">Learn how to deploy this blog to Cloudflare Pages.</p>
+            <span class="card-link-text">Read guide &rarr;</span>
+          </router-link>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .home-container {
-  max-width: 1200px;
+  min-height: 100vh;
+  background-color: #fff;
+}
+
+.content-wrapper {
+  max-width: 1024px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 64px 24px;
 }
 
-.hero {
-  text-align: center;
-  padding: 60px 0;
+/* Hero Section */
+.hero-section {
+  margin-bottom: 64px;
 }
 
-h1 {
+.hero-icon-wrapper {
+  margin-bottom: 24px;
+}
+
+.product-title {
   font-size: 48px;
+  line-height: 1.1;
   font-weight: 700;
-  margin-bottom: 16px;
-  color: #1a1a1a;
+  color: #000000;
+  margin: 0 0 24px 0;
+  letter-spacing: -0.5px;
 }
 
-.subtitle {
+.product-description {
   font-size: 20px;
-  color: #595959;
-  margin-bottom: 32px;
+  line-height: 1.5;
+  color: #36393a;
+  margin: 0 0 32px 0;
+  max-width: 700px;
 }
 
-.cta-group {
+.hero-actions {
   display: flex;
-  justify-content: center;
   gap: 16px;
 }
 
 .btn {
-  padding: 10px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
   border-radius: 4px;
   text-decoration: none;
-  font-weight: 600;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s;
+  height: 40px;
 }
 
 .btn-primary {
-  background-color: #F38020;
+  background-color: #0051C3; /* Cloudflare Docs Blue */
   color: white;
+  border: 1px solid transparent;
 }
 
 .btn-primary:hover {
-  background-color: #d96d15;
+  background-color: #003681;
 }
 
 .btn-secondary {
   background-color: white;
-  color: #F38020;
-  border: 1px solid #F38020;
+  color: #0051C3;
+  border: 1px solid #0051C3;
 }
 
 .btn-secondary:hover {
-  background-color: #FFF0E0;
+  background-color: #f2f8ff;
 }
 
-.features {
+/* Grid Section */
+.section-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #000;
+  margin: 0 0 24px 0;
+}
+
+.card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Wider cards */
   gap: 24px;
-  margin-top: 60px;
 }
 
-.feature-card {
+.doc-card {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px; /* Slightly sharper corners */
   padding: 24px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
-  transition: transform 0.2s, box-shadow 0.2s;
+  background-color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
-.feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  border-color: #F38020;
+.doc-card:hover {
+  border-color: #b3b3b3;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Generic shadow */
 }
 
-h3 {
-  margin-top: 0;
-  color: #333;
+.link-card {
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.verification-wrapper {
+.link-card:hover {
+  border-color: #0051C3; /* Hover blue border */
+}
+
+.link-card:hover .card-link-text {
+  text-decoration: underline;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #36393a;
+  margin: 0 0 8px 0;
+}
+
+.link-card .card-title {
+  color: #0051C3; /* Blue titles for links */
+}
+
+.card-desc {
+  font-size: 14px;
+  color: #595959;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+  flex-grow: 1;
+}
+
+.card-link-text {
+  font-size: 14px;
+  color: #0051C3;
+  font-weight: 600;
   margin-top: auto;
-  padding-top: 20px;
+}
+
+.card-slot {
+  margin-top: 16px;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 16px;
+  border-radius: 4px;
+}
+
+.center-slot {
   display: flex;
   justify-content: center;
 }
 
-.quick-links {
-  margin-top: auto;
-  padding-top: 16px;
-}
-
-.link-arrow {
-  color: #F38020;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.link-arrow:hover {
-  text-decoration: underline;
-}
-
-/* Adjust IP Card styles within the grid */
-:deep(.ms-card) {
-  box-shadow: none !important;
+/* Override IpInfoCard internal styles if needed for this context */
+:deep(.client-info-card) {
   padding: 0 !important;
 }
-:deep(.card-header h3) {
-  display: none; /* Hide internal title as we have outer title */
+:deep(.card-header) {
+  border-bottom-color: #e0e0e0;
 }
 </style>
