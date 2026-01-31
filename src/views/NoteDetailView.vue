@@ -1,104 +1,435 @@
 <script setup>
 import { useRoute } from 'vue-router'
-import { computed, watch } from 'vue'
+import { computed, watch, ref } from 'vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import { useNotes } from '../composables/useNotes'
 
 const route = useRoute()
-const { getNoteById, fetchNoteContent, isLoading } = useNotes() // using getNoteById which now expects slug
+const { getNoteById, fetchNoteContent, isLoading, notes } = useNotes()
 
 const noteSlug = route.params.slug
-// Handle array slug
 const slugStr = Array.isArray(noteSlug) ? noteSlug.join('/') : noteSlug
 const note = computed(() => getNoteById(slugStr))
 
+// Sidebar: Related notes in same category
+const relatedNotes = computed(() => {
+  if (!note.value) return []
+  return notes.value.filter(n => n.category === note.value.category)
+})
+
+// TOC Generation
+const toc = ref([])
+const generateToc = () => {
+  if (!note.value || !note.value.content) return
+  // Strip frontmatter
+  const content = (note.value.content || '').replace(/^---[\s\S]*?---\n/, '')
+  // Match headers, but exclude the first H1 if it's there
+  const lines = content.split('\n')
+  const headers = []
+  let foundFirstH1 = false
+  
+  for (const line of lines) {
+    if (line.startsWith('# ')) {
+      if (!foundFirstH1) {
+        foundFirstH1 = true
+        continue
+      }
+    }
+    const match = line.match(/^(#{2,3})\s+(.*)$/)
+    if (match) {
+      const level = match[1].length
+      const text = match[2].trim()
+      const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-')
+      headers.push({ level, text, id })
+    }
+  }
+  
+  toc.value = headers
+}
+
 watch(note, async (newNote) => {
-  if (newNote && !newNote.content) {
-    await fetchNoteContent(newNote)
+  if (newNote) {
+    if (!newNote.content) {
+      await fetchNoteContent(newNote)
+    }
+    generateToc()
   }
 }, { immediate: true })
+
+const scrollToHeader = (id) => {
+  const el = document.getElementById(id)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' })
+    history.pushState(null, null, `#${id}`)
+  }
+}
+
+const readingTime = computed(() => {
+  if (!note.value?.content) return 1
+  const words = note.value.content.split(/\s+/).length
+  return Math.max(1, Math.ceil(words / 200))
+})
 </script>
 
 <template>
-  <div class="note-detail-container" v-if="note">
-    <div class="detail-header">
-      <router-link to="/notes" class="back-link">← Back to Notes</router-link>
-      <div class="meta-top">
-        <span class="category-pill">{{ note.category }}</span>
-      </div>
-      <h1 class="note-title">{{ note.title }}</h1>
-      <div class="meta-info">Last edited on {{ note.date }}</div>
-    </div>
+  <div class="note-page" v-if="note">
+    <!-- Main Docs Grid -->
+    <div class="docs-grid">
+      
+      <!-- Left Navigation -->
+      <aside class="left-nav">
+        <nav class="nav-tree">
+          <router-link to="/notes" class="nav-root">All Notes</router-link>
+          <div class="nav-category">
+            <div class="category-header">{{ note.category }}</div>
+            <ul class="nav-list">
+              <li v-for="n in relatedNotes" :key="n.id">
+                <router-link 
+                  :to="'/notes/' + n.slug" 
+                  class="nav-item"
+                  active-class="active"
+                >
+                  {{ n.title }}
+                </router-link>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
 
-    <div class="paper-surface">
-      <div v-if="isLoading && !note.content" class="loading-indicator">Loading content...</div>
-      <MarkdownRenderer v-else :content="note.content" />
+      <!-- Content Area -->
+      <main class="content-area">
+        <nav class="breadcrumbs">
+          <router-link to="/">Home</router-link>
+          <span class="sep">/</span>
+          <router-link to="/notes">Notes</router-link>
+          <span class="sep">/</span>
+          <span class="current">{{ note.category }}</span>
+        </nav>
+
+        <article class="doc-body">
+          <header class="doc-header">
+            <h1 class="doc-title">{{ note.title }}</h1>
+            <div class="doc-meta">
+              <span class="meta-item">Article</span>
+              <span class="dot">•</span>
+              <span class="meta-item">{{ note.date }}</span>
+              <span class="dot">•</span>
+              <span class="meta-item">{{ readingTime }} min to read</span>
+            </div>
+          </header>
+
+          <div class="doc-content">
+            <div v-if="isLoading && !note.content" class="loading-state">
+              <div class="spinner"></div>
+              <span>Loading article...</span>
+            </div>
+            <MarkdownRenderer v-else :content="note.content" />
+          </div>
+        </article>
+      </main>
+
+      <!-- Right TOC -->
+      <aside class="right-toc">
+        <div class="toc-wrapper">
+          <h3 class="toc-title">In this article</h3>
+          <ul class="toc-list" v-if="toc.length">
+            <li v-for="item in toc" :key="item.id" :class="['toc-item', `level-${item.level}`]">
+              <a href="#" @click.prevent="scrollToHeader(item.id)">{{ item.text }}</a>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
     </div>
   </div>
-  <div v-else class="not-found">
-    <h2>Note not found</h2>
-    <router-link to="/notes">Return to list</router-link>
+  <div v-else-if="!isLoading" class="not-found">
+    <h2>Article not found</h2>
+    <p>We're sorry, we couldn't find the page you're looking for.</p>
+    <router-link to="/notes" class="ms-btn">Browse all documentation</router-link>
   </div>
 </template>
 
 <style scoped>
-.category-pill {
-  font-size: 12px;
-  background: #eff6fc;
-  color: #0078d4;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  display: inline-block;
+/* Microsoft Learn Layout */
+.note-page {
+  background-color: #fff;
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #242424;
 }
 
-.not-found {
-  padding: 50px;
-  text-align: center;
-}
-
-.note-detail-container {
-  max-width: 900px;
+.docs-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 32px 20px;
+  gap: 0;
 }
 
-.detail-header {
-  margin-bottom: 32px;
+@media (max-width: 1200px) {
+  .docs-grid {
+    grid-template-columns: 260px 1fr;
+  }
+  .right-toc {
+    display: none;
+  }
 }
 
-.back-link {
-  color: #0078d4;
+@media (max-width: 800px) {
+  .docs-grid {
+    grid-template-columns: 1fr;
+  }
+  .left-nav {
+    display: none;
+  }
+}
+
+/* Right TOC */
+.right-toc {
+  height: calc(100vh - 48px);
+  position: sticky;
+  top: 48px;
+  padding: 32px 24px;
+}
+
+.toc-wrapper {
+  border-left: 1px solid #edebe9;
+  padding-left: 16px;
+}
+
+.toc-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  color: #242424;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-item {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.toc-item.level-3 {
+  padding-left: 16px;
+}
+
+.toc-item a {
+  color: #605e5c;
   text-decoration: none;
   font-size: 14px;
-  margin-bottom: 16px;
-  display: inline-block;
 }
 
-.back-link:hover {
+.toc-item a:hover {
+  color: #0067b8;
   text-decoration: underline;
 }
 
-.note-title {
-  font-size: 32px;
+/* Left Nav Styles */
+.left-nav {
+  border-right: 1px solid #edebe9;
+  height: calc(100vh - 48px);
+  position: sticky;
+  top: 48px;
+  overflow-y: auto;
+  padding: 32px 24px;
+}
+
+.nav-root {
+  display: block;
   font-weight: 600;
-  color: #201f1e;
-  margin-bottom: 8px;
+  color: #242424;
+  text-decoration: none;
+  margin-bottom: 24px;
+  font-size: 14px;
 }
 
-.meta-info {
-  color: #605e5c;
+.category-header {
+  font-weight: 600;
   font-size: 12px;
+  text-transform: uppercase;
+  color: #605e5c;
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
 }
 
-.paper-surface {
-  background: white;
-  padding: 48px;
-  min-height: 500px;
-  box-shadow:
-    0 0.3px 0.9px rgba(0, 0, 0, 0.11),
-    0 1.6px 3.6px rgba(0, 0, 0, 0.13);
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  display: block;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #242424;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-bottom: 2px;
+}
+
+.nav-item:hover {
+  background-color: #f3f2f1;
+}
+
+.nav-item.active {
+  background-color: #eff6fc;
+  color: #0078d4;
+  font-weight: 600;
+}
+
+/* Main Content Area */
+.content-area {
+  padding: 32px 64px 80px 64px;
+  max-width: 960px;
+  justify-self: center;
+  width: 100%;
+}
+
+@media (max-width: 1000px) {
+  .content-area {
+    padding: 32px 24px;
+  }
+}
+
+.breadcrumbs {
+  font-size: 12px;
+  color: #605e5c;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumbs a {
+  color: #605e5c;
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  color: #0078d4;
+  text-decoration: underline;
+}
+
+.sep {
+  color: #c8c6c4;
+}
+
+/* Article Header */
+.doc-header {
+  margin-bottom: 32px;
+}
+
+.doc-title {
+  font-size: 40px;
+  font-weight: 600;
+  color: #242424;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+.doc-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #605e5c;
+}
+
+.dot {
+  font-size: 8px;
+}
+
+/* Right TOC Area */
+.right-toc {
+  padding: 32px 24px;
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+}
+
+.toc-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #242424;
+  margin-bottom: 16px;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-left: 1px solid #edebe9;
+}
+
+.toc-item {
+  padding: 4px 0;
+}
+
+.toc-item a {
+  display: block;
+  font-size: 13px;
+  color: #605e5c;
+  text-decoration: none;
+  padding-left: 16px;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+}
+
+.toc-item a:hover {
+  color: #242424;
+}
+
+.level-3 {
+  padding-left: 12px;
+}
+
+/* Loading/Error */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: #605e5c;
+  gap: 16px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #edebe9;
+  border-top-color: #0078d4;
+  border-radius: 50%;
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ms-btn {
+  display: inline-block;
+  background-color: #0078d4;
+  color: white;
+  padding: 8px 20px;
   border-radius: 2px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+.ms-btn:hover {
+  background-color: #005a9e;
 }
 </style>
