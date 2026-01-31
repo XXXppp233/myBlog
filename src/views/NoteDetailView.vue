@@ -2,9 +2,11 @@
 import { computed, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNotes } from '../composables/useNotes'
+import { useUIStore } from '../stores/ui'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 
 const route = useRoute()
+const uiStore = useUIStore()
 const { getNoteBySlug, notes } = useNotes()
 
 const note = computed(() => {
@@ -55,7 +57,7 @@ const scrollToHeader = (id) => {
 <template>
   <div class="docs-layout" v-if="note">
     <!-- Left Sidebar: Context/Category Nav -->
-    <aside class="left-sidebar">
+    <aside class="left-sidebar" :class="{ 'mobile-open': uiStore.isSidebarOpen }">
       <div class="sidebar-group">
         <h3 class="sidebar-title">{{ note.category }}</h3>
         <ul class="sidebar-list">
@@ -125,7 +127,7 @@ const scrollToHeader = (id) => {
 }
 
 .left-sidebar {
-  width: 280px; /* Standard sidebar width */
+  width: 20%; /* 20% width */
   flex-shrink: 0;
   position: sticky;
   top: 64px; /* Matches Header Height */
@@ -134,30 +136,40 @@ const scrollToHeader = (id) => {
   padding: 32px 24px;
   border-right: 1px solid #ebebeb;
   background-color: #fff;
+  box-sizing: border-box;
 }
 
 .right-sidebar {
-  width: 200px; /* Reduced width to bring it closer */
+  width: 20%; /* 20% width */
   flex-shrink: 0;
   position: sticky;
   top: 64px;
   height: calc(100vh - 64px);
   padding-top: 32px;
-  padding-left: 0; /* Align left edge */
+  padding-left: 24px; 
   display: none;
   font-size: 13px;
+  box-sizing: border-box;
 }
 
 .docs-content {
-  flex-grow: 1;
-  max-width: 860px; /* Content max-width */
-  margin: 0 auto; /* Center content in the middle area */
+  width: 100%; /* Default 100% when sidebars hidden */
+  flex-shrink: 0;
+  flex-grow: 0;
+  margin: 0;
   padding: 40px 48px 64px 48px;
+  box-sizing: border-box;
 }
 
 @media (min-width: 1024px) {
+  .left-sidebar {
+     display: block; /* Ensure visible on desktop */
+  }
   .right-sidebar {
     display: block;
+  }
+  .docs-content {
+    width: 60%; /* 20+60+20 */
   }
 }
 
@@ -278,25 +290,35 @@ h1 {
   color: #767676;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
+/* Mobile/Tablet Responsive (< 1024px) */
+@media (max-width: 1023px) {
   .docs-layout {
     flex-direction: column;
-    padding: 0 16px;
+    padding: 0;
   }
   
+  /* Sidebar is hidden by default, toggled via .mobile-open */
   .left-sidebar {
-    width: 100%;
+    display: none;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    bottom: 0;
+    width: 280px; /* Fixed width sidebar overlay */
     height: auto;
-    position: relative;
-    top: 0;
-    border-right: none;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #ebebeb;
+    border-right: 1px solid #ebebeb;
+    background-color: #fff;
+    z-index: 1000;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.1);
+  }
+  
+  .left-sidebar.mobile-open {
+    display: block;
   }
   
   .docs-content {
-    padding-top: 24px;
+    width: 100%;
+    padding: 24px 24px 64px 24px;
   }
 }
 </style>

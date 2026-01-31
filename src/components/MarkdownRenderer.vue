@@ -11,28 +11,9 @@ const props = defineProps({
 
 // Custom renderer to add IDs to headings for TOC navigation
 const renderer = new marked.Renderer()
-renderer.heading = function({ tokens, depth, text }) {
-  // marked 5.0+ changed to object parameter if not using old signature. 
-  // Wait, marked 17.0.1 ? Let's check documentation or assume standard (text, level, raw) might still be supported or changed.
-  // Actually, recent marked versions pass ({ tokens, depth, text, raw }) as object to this.heading.
-  
-  // Let's support both just in case, but prefer object destructuring if it comes as object
-  let actualText = text;
-  let actualLevel = depth;
-  
-  // Check if first arg is object and has 'depth' property
-  if (typeof tokens === 'object' && tokens !== null && 'depth' in tokens) {
-     actualText = tokens.text;
-     actualLevel = tokens.depth;
-  } else {
-     // Fallback to old signature: (text, level, raw)
-     actualText = tokens; // first arg is text
-     actualLevel = depth; // second arg is level
-  }
-  
-  const safeText = actualText || ''
-  const id = String(safeText).toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-') 
-  return `<h${actualLevel} id="${id}">${actualText}</h${actualLevel}>`
+renderer.heading = function({ text, depth }) {
+  const id = String(text).toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-') 
+  return `<h${depth} id="${id}">${text}</h${depth}>`
 }
 
 const html = computed(() => {
