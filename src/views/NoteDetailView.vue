@@ -119,38 +119,39 @@ const scrollToHeader = (id) => {
 /* Layout */
 .docs-layout {
   display: flex;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 24px;
-  gap: 48px;
+  width: 100%; /* Full width */
+  margin: 0;
+  padding: 0;
 }
 
 .left-sidebar {
-  width: 240px;
+  width: 280px; /* Standard sidebar width */
   flex-shrink: 0;
   position: sticky;
-  top: 88px; /* Offset for sticky header */
-  height: calc(100vh - 88px);
+  top: 64px; /* Matches Header Height */
+  height: calc(100vh - 64px);
   overflow-y: auto;
-  padding-top: 32px;
+  padding: 32px 24px;
   border-right: 1px solid #ebebeb;
+  background-color: #fff;
 }
 
 .right-sidebar {
-  width: 200px;
+  width: 240px;
   flex-shrink: 0;
   position: sticky;
-  top: 88px;
-  height: calc(100vh - 88px);
+  top: 64px;
+  height: calc(100vh - 64px);
   padding-top: 32px;
+  padding-right: 24px;
   display: none;
 }
 
 .docs-content {
   flex-grow: 1;
-  max-width: 800px; /* Readability max width */
-  padding-top: 40px;
-  padding-bottom: 64px;
+  max-width: 860px; /* Content max-width */
+  margin: 0 auto; /* Center content in the middle area */
+  padding: 40px 48px 64px 48px;
 }
 
 @media (min-width: 1024px) {

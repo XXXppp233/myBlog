@@ -9,10 +9,20 @@ const props = defineProps({
   }
 })
 
+// Custom renderer to add IDs to headings for TOC navigation
+const renderer = new marked.Renderer()
+renderer.heading = function(text, level, raw) {
+  // Same slugify logic as in NoteDetailView
+  const id = text.toLowerCase().replace(/[^\w]+/g, '-')
+  return `<h${level} id="${id}">${text}</h${level}>`
+}
+
 const html = computed(() => {
-  // Simple frontmatter removal:
   // Remove content between first --- and second ---
   const content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')
+  
+  // Use the custom renderer
+  marked.use({ renderer })
   return marked(content)
 })
 </script>
