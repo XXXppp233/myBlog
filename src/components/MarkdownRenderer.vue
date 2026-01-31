@@ -16,6 +16,20 @@ renderer.heading = function({ text, depth }) {
   return `<h${depth} id="${id}">${text}</h${depth}>`
 }
 
+renderer.code = function({ text, lang }) {
+  if (lang === 'Embed') {
+    return text;
+  }
+  // Default code block rendering
+  const escaped = text.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/'/g, '&#39;');
+  return `<pre><code class="language-${lang || ''}">${escaped}</code></pre>`;
+}
+
+
 const html = computed(() => {
   // Remove content between first --- and second ---
   const content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')

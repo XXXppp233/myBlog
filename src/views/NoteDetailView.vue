@@ -7,7 +7,7 @@ import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 
 const route = useRoute()
 const uiStore = useUIStore()
-const { getNoteBySlug, notes } = useNotes()
+const { getNoteBySlug, notes, fetchNoteContent, isLoading } = useNotes()
 
 const note = computed(() => {
   const slug = route.params.slug
@@ -24,7 +24,7 @@ const relatedNotes = computed(() => {
 // TOC Generation
 const toc = ref([])
 const generateToc = () => {
-  if (!note.value) return
+  if (!note.value || !note.value.content) return
   // Parse markdown for headers (simple regex approach for this purpose)
   // Remove frontmatter first
   const content = (note.value.content || '').replace(/^---[\s\S]*?---\n/, '')
@@ -38,9 +38,14 @@ const generateToc = () => {
   })
 }
 
-// Watch note to regenerate TOC
-watch(note, () => {
-  generateToc()
+// Watch note to regenerate TOC and fetch content
+watch(note, async (newNote) => {
+  if (newNote) {
+    if (!newNote.content) {
+       await fetchNoteContent(newNote)
+    }
+    generateToc()
+  }
 }, { immediate: true })
 
 // Helper to scroll to anchor (since we render MD dynamically)
@@ -89,7 +94,8 @@ const scrollToHeader = (id) => {
         </div>
       </div>
       <div class="note-body">
-        <MarkdownRenderer :content="note.content" />
+        <div v-if="isLoading && !note.content" class="loading-state">Loading content...</div>
+        <MarkdownRenderer v-else :content="note.content" />
       </div>
     </main>
 

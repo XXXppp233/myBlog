@@ -1,68 +1,82 @@
 import { ref, computed } from 'vue'
 
-const modules = import.meta.glob('../content/notes/**/*.md', { as: 'raw', eager: true })
+const notes = ref([])
+const isLoaded = ref(false)
+const isLoading = ref(false)
 
 export function useNotes() {
-  const notes = computed(() => {
-    return Object.keys(modules).map((path) => {
-      // path example: "../content/notes/git/collaborate.md"
-      const content = modules[path]
-      
-      // Extract category and slug
-      // Remove "../content/notes/" -> "git/collaborate.md"
-      const relativePath = path.replace('../content/notes/', '')
-      const parts = relativePath.split('/')
-      
-      let category = 'Uncategorized'
-      let name = relativePath.replace('.md', '')
-      
-      if (parts.length > 1) {
-        category = parts[0]
-        name = parts.slice(1).join('/').replace('.md', '')
-      }
-      
-      // Simple Frontmatter extraction (if present)
-      // Assuming frontmatter is betwen --- and ---
-      let title = name
-      let date = null
-      
-      const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
-      if (fmMatch) {
-        const fmString = fmMatch[1]
-        fmString.split('\n').forEach(line => {
-          const [key, ...val] = line.split(':')
-          if (key && val) {
-            const k = key.trim()
-            const v = val.join(':').trim()
-            if (k === 'title') title = v.replace(/^['"](.*)['"]$/, '$1')
-            if (k === 'date') date = new Date(v)
-          }
-        })
-      }
+  const initNotes = async () => {
+    if (isLoaded.value || isLoading.value) return
+    isLoading.value = true
+    try {
+      const response = await fetch('https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/blog.xml')
+      const text = await response.text()
+      const parser = new DOMParser()
+      const xmlDoc = parser.parseFromString(text, 'text/xml')
+      const noteNodes = xmlDoc.getElementsByTagName('note')
 
-      return {
-        path,
-        slug: relativePath.replace('.md', ''),
-        title: title || name,
-        category,
-        content,
-        date
-      }
-    })
-  })
+      const fetchedNotes = Array.from(noteNodes).map(node => {
+        const path = node.querySelector('path')?.textContent || ''
+        const title = node.querySelector('title')?.textContent || ''
+        const category = node.querySelector('category')?.textContent || ''
+        const mtime = node.querySelector('mtime')?.textContent || ''
+        const url = node.querySelector('url')?.textContent || ''
+        
+        // Slug generation: strip .md extension from path
+        // e.g. "git/collaborate.md" -> "git/collaborate"
+        const slug = path.replace(/\.md$/i, '')
+        
+        return {
+          slug,
+          title,
+          category,
+          mtime: mtime ? new Date(mtime) : null,
+          url,
+          path, // keep original path if needed
+          content: null // loaded lazily
+        }
+      })
+      notes.value = fetchedNotes
+      isLoaded.value = true
+    } catch (error) {
+      console.error('Failed to load blog.xml:', error)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Trigger load if not already loaded
+  if (!isLoaded.value && !isLoading.value) {
+    initNotes()
+  }
 
   const getNoteBySlug = (slug) => {
     return notes.value.find(n => n.slug === slug)
   }
 
+  const fetchNoteContent = async (note) => {
+    if (!note || note.content) return
+    try {
+      const res = await fetch(note.url)
+      if (res.ok) {
+        note.content = await res.text()
+      }
+    } catch (e) {
+      console.error('Failed to fetch note content:', e)
+    }
+  }
+
   const categories = computed(() => {
-    const cats = new Set(notes.value.map(n => n.category))
+    const cats = new Set(notes.value.map(n => n.category).filter(c => c))
     return Array.from(cats).sort()
   })
 
   return {
     notes,
     categories,
-    getNoteBySlug
+    getNoteBySlug,
+    fetchNoteContent,
+    initNotes,
+    isLoaded
   }
 }
