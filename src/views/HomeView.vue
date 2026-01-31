@@ -1,3 +1,7 @@
+<script setup>
+import IpInfoCard from '../components/IpInfoCard.vue'
+</script>
+
 <template>
   <div class="home-container">
     <section class="hero">
@@ -6,23 +10,23 @@
         <p class="subtitle">Secure, fast, and reliable knowledge sharing.</p>
         <div class="cta-group">
           <router-link to="/notes" class="btn btn-primary">Start Reading</router-link>
-          <a href="#" class="btn btn-secondary">Documentation</a>
+          <router-link to="/notes/cloudflare/deploy-pages" class="btn btn-secondary">Documentation</router-link>
         </div>
       </div>
     </section>
     
     <section class="features">
-      <div class="feature-card">
-        <h3>Performance</h3>
-        <p>Optimized for speed and efficiency.</p>
+      <div class="feature-card ip-card-container">
+        <h3>Your IP Info</h3>
+        <IpInfoCard />
       </div>
       <div class="feature-card">
-        <h3>Security</h3>
-        <p>Built with privacy and safety in mind.</p>
+        <h3>Quick Start</h3>
+        <p>Get up and running in seconds with our optimized templates and guides.</p>
       </div>
       <div class="feature-card">
-        <h3>Reliability</h3>
-        <p>Always online, always available.</p>
+        <h3>Verification</h3>
+        <p>Cloudflare believes you are human. Access granted with zero friction.</p>
       </div>
     </section>
   </div>
@@ -88,7 +92,7 @@ h1 {
 
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
   margin-top: 60px;
 }
@@ -110,5 +114,14 @@ h1 {
 h3 {
   margin-top: 0;
   color: #333;
+}
+
+/* Adjust IP Card styles within the grid */
+:deep(.ms-card) {
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+:deep(.card-header h3) {
+  display: none; /* Hide internal title as we have outer title */
 }
 </style>

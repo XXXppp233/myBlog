@@ -10,9 +10,6 @@
         <router-link to="/" class="cf-link" active-class="active">Home</router-link>
         <router-link to="/notes" class="cf-link" active-class="active">Notes</router-link>
       </div>
-      <div class="cf-actions">
-        <button class="cf-btn">Log In</button>
-      </div>
     </div>
   </nav>
 </template>
