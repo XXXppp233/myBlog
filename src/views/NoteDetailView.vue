@@ -1,14 +1,22 @@
 <script setup>
 import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import { useNotes } from '../composables/useNotes'
 
 const route = useRoute()
-const { getNoteById } = useNotes()
+const { getNoteById, fetchNoteContent, isLoading } = useNotes() // using getNoteById which now expects slug
 
-const noteId = route.params.id
-const note = computed(() => getNoteById(noteId))
+const noteSlug = route.params.slug
+// Handle array slug
+const slugStr = Array.isArray(noteSlug) ? noteSlug.join('/') : noteSlug
+const note = computed(() => getNoteById(slugStr))
+
+watch(note, async (newNote) => {
+  if (newNote && !newNote.content) {
+    await fetchNoteContent(newNote)
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -23,7 +31,8 @@ const note = computed(() => getNoteById(noteId))
     </div>
 
     <div class="paper-surface">
-      <MarkdownRenderer :content="note.content" />
+      <div v-if="isLoading && !note.content" class="loading-indicator">Loading content...</div>
+      <MarkdownRenderer v-else :content="note.content" />
     </div>
   </div>
   <div v-else class="not-found">

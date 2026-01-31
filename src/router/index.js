@@ -17,7 +17,7 @@ const router = createRouter({
       component: NotesView,
     },
     {
-      path: '/notes/:id',
+      path: '/notes/:slug(.*)',
       name: 'note-detail',
       component: NoteDetailView,
     },

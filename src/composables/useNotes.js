@@ -1,81 +1,90 @@
 import { ref, computed } from 'vue'
 
-// Use Vite's import.meta.glob to load all markdown files in the content directory
-const modules = import.meta.glob('../content/notes/**/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-})
-
-function parseNote(path, content) {
-  // Simple frontmatter parser
-  const frontmatterRegex = /^---\s*([\s\S]*?)\s*---/
-  const match = content.match(frontmatterRegex)
-
-  let metadata = {}
-  let body = content
-
-  if (match) {
-    const yaml = match[1]
-    body = content.replace(match[0], '').trim()
-
-    // Simple YAML-like parsing (key: value)
-    yaml.split('\n').forEach((line) => {
-      const parts = line.split(':')
-      if (parts.length >= 2) {
-        const key = parts[0].trim()
-        const value = parts.slice(1).join(':').trim()
-        metadata[key] = value
-      }
-    })
-  }
-
-  // Extract category from path (e.g., ../content/notes/azure/app-service.md -> azure)
-  const pathParts = path.split('/')
-  // Assuming structure ../content/notes/<category>/<filename>
-  // pathParts will be ['.', '.', 'content', 'notes', 'category', 'filename']
-  // We need to be careful about the split.
-  // Let's use a safer relative path approach.
-  const category = pathParts[pathParts.length - 2]
-  const filename = pathParts[pathParts.length - 1]
-  const id = filename.replace('.md', '')
-
-  return {
-    id: `${category}-${id}`, // unique id
-    slug: id,
-    category,
-    path,
-    title: metadata.title || filename,
-    date: metadata.date || new Date().toISOString().split('T')[0],
-    preview: metadata.preview || body.substring(0, 100) + '...',
-    content: body,
-  }
-}
-
-const allNotes = Object.keys(modules).map((path) => {
-  return parseNote(path, modules[path])
-})
+const notes = ref([])
+const isLoaded = ref(false)
+const isLoading = ref(false)
 
 export function useNotes() {
-  const notes = ref(allNotes)
+  const initNotes = async () => {
+    if (isLoaded.value || isLoading.value) return
+    isLoading.value = true
+    try {
+      // Using 'change' branch as the source of truth for blog.xml as established
+      const response = await fetch('https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/blog.xml')
+      const text = await response.text()
+      const parser = new DOMParser()
+      const xmlDoc = parser.parseFromString(text, 'text/xml')
+      const noteNodes = xmlDoc.getElementsByTagName('note')
 
-  const getNoteById = (id) => {
-    return notes.value.find((n) => n.id === id)
+      const fetchedNotes = Array.from(noteNodes).map(node => {
+        const path = node.querySelector('path')?.textContent || ''
+        const title = node.querySelector('title')?.textContent || ''
+        const category = node.querySelector('category')?.textContent || ''
+        const mtime = node.querySelector('mtime')?.textContent || ''
+        const url = node.querySelector('url')?.textContent || ''
+        
+        // Slug generation: strip .md extension from path
+        // e.g. "git/collaborate.md" -> "git/collaborate"
+        const slug = path.replace(/\.md$/i, '')
+        
+        return {
+          id: slug, // Map slug to id for compatibility
+          slug,
+          title,
+          category,
+          date: mtime ? new Date(mtime).toISOString().split('T')[0] : '', // Format date for Azure view
+          url,
+          path,
+          content: null // loaded lazily
+        }
+      })
+      notes.value = fetchedNotes
+      isLoaded.value = true
+    } catch (error) {
+      console.error('Failed to load blog.xml:', error)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Trigger load if not already loaded
+  if (!isLoaded.value && !isLoading.value) {
+    initNotes()
+  }
+
+  const getNoteById = (slug) => {
+    // Azure view called it getNoteById, passing slug now
+    return notes.value.find(n => n.slug === slug)
+  }
+
+  const getNotesByCategory = (category) => {
+     if (!category) return notes.value
+     return notes.value.filter(n => n.category === category)
+  }
+
+  const fetchNoteContent = async (note) => {
+    if (!note || note.content) return
+    try {
+      const res = await fetch(note.url)
+      if (res.ok) {
+        note.content = await res.text()
+      }
+    } catch (e) {
+      console.error('Failed to fetch note content:', e)
+    }
   }
 
   const categories = computed(() => {
-    return [...new Set(notes.value.map((n) => n.category))]
+    const cats = new Set(notes.value.map(n => n.category).filter(c => c))
+    return Array.from(cats).sort()
   })
-
-  const getNotesByCategory = (category) => {
-    if (!category) return notes.value
-    return notes.value.filter((n) => n.category === category)
-  }
 
   return {
     notes,
     categories,
     getNoteById,
     getNotesByCategory,
+    fetchNoteContent,
+    isLoading
   }
 }

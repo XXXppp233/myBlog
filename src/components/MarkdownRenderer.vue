@@ -9,8 +9,26 @@ const props = defineProps({
   },
 })
 
+// Custom renderer to handle Embed blocks and frontmatter stripping
+const renderer = new marked.Renderer()
+renderer.code = function({ text, lang }) {
+  if (lang === 'Embed') {
+    return text;
+  }
+  // Default code block rendering
+  const escaped = text.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/'/g, '&#39;');
+  return `<pre><code class="language-${lang || ''}">${escaped}</code></pre>`;
+}
+
 const htmlContent = computed(() => {
-  return marked(props.content)
+  // Strip frontmatter first
+  const content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')
+  marked.use({ renderer })
+  return marked(content)
 })
 </script>
 
