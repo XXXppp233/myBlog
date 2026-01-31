@@ -1,19 +1,15 @@
 <script setup>
-import { computed, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { useNotes } from '../composables/useNotes'
-import { useUIStore } from '../stores/ui'
+import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
+import { useNotes } from '../composables/useNotes'
 
 const route = useRoute()
-const uiStore = useUIStore()
-const { getNoteBySlug, notes, fetchNoteContent, isLoading } = useNotes()
+const { getNoteBySlug, fetchNoteContent, isLoading, notes } = useNotes()
 
-const note = computed(() => {
-  const slug = route.params.slug
-  const slugStr = Array.isArray(slug) ? slug.join('/') : slug
-  return getNoteBySlug(slugStr)
-})
+const noteSlug = computed(() => route.params.slug)
+const slugStr = computed(() => Array.isArray(noteSlug.value) ? noteSlug.value.join('/') : noteSlug.value)
+const note = computed(() => getNoteBySlug(slugStr.value))
 
 // Sidebar: Related notes in same category
 const relatedNotes = computed(() => {
@@ -21,310 +17,450 @@ const relatedNotes = computed(() => {
   return notes.value.filter(n => n.category === note.value.category)
 })
 
+const activeId = ref('')
+const handleScroll = () => {
+  const sections = toc.value.map(item => document.getElementById(item.id))
+  const scrollPos = window.scrollY + 100
+
+  for (let i = sections.length - 1; i >= 0; i--) {
+    const section = sections[i]
+    if (section && scrollPos >= section.offsetTop) {
+      activeId.value = toc.value[i].id
+      break
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
+
 // TOC Generation
 const toc = ref([])
 const generateToc = () => {
   if (!note.value || !note.value.content) return
-  // Parse markdown for headers (simple regex approach for this purpose)
-  // Remove frontmatter first
+  // Strip frontmatter
   const content = (note.value.content || '').replace(/^---[\s\S]*?---\n/, '')
-  const headers = content.match(/^#{2,3}\s+(.*)$/gm) || []
+  // Match headers, but exclude the first H1 if it's there
+  const lines = content.split('\n')
+  const headers = []
+  let foundFirstH1 = false
   
-  toc.value = headers.map(h => {
-    const level = h.match(/^#+/)[0].length
-    const text = h.replace(/^#+\s+/, '')
-    const id = text.toLowerCase().replace(/[^\w]+/g, '-')
-    return { level, text, id }
-  })
+  for (const line of lines) {
+    if (line.startsWith('# ')) {
+      if (!foundFirstH1) {
+        foundFirstH1 = true
+        continue
+      }
+    }
+    const match = line.match(/^(#{2,3})\s+(.*)$/)
+    if (match) {
+      const level = match[1].length
+      const text = match[2].trim()
+      const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-')
+      headers.push({ level, text, id })
+    }
+  }
+  
+  toc.value = headers
 }
 
-// Watch note to regenerate TOC and fetch content
 watch(note, async (newNote) => {
   if (newNote) {
     if (!newNote.content) {
-       await fetchNoteContent(newNote)
+      await fetchNoteContent(newNote)
     }
     generateToc()
   }
 }, { immediate: true })
 
-// Helper to scroll to anchor (since we render MD dynamically)
 const scrollToHeader = (id) => {
   const el = document.getElementById(id)
   if (el) {
     el.scrollIntoView({ behavior: 'smooth' })
-    // Update URL hash without reload
     history.pushState(null, null, `#${id}`)
   }
 }
+
+const readingTime = computed(() => {
+  if (!note.value?.content) return 1
+  const words = note.value.content.split(/\s+/).length
+  return Math.max(1, Math.ceil(words / 200))
+})
 </script>
 
 <template>
-  <div class="docs-layout" v-if="note">
-    <!-- Left Sidebar: Context/Category Nav -->
-    <aside class="left-sidebar" :class="{ 'mobile-open': uiStore.isSidebarOpen }">
-      <div class="sidebar-group">
-        <h3 class="sidebar-title">{{ note.category }}</h3>
-        <ul class="sidebar-list">
-          <li v-for="n in relatedNotes" :key="n.slug">
-            <router-link 
-              :to="'/notes/' + n.slug" 
-              class="sidebar-link"
-              active-class="active"
-            >
-              {{ n.title }}
-            </router-link>
-          </li>
-        </ul>
-      </div>
+  <div class="note-page" v-if="note">
+    <!-- Main Docs Grid -->
+    <div class="docs-grid">
       
-      <div class="sidebar-group">
-        <router-link to="/notes" class="back-link">
-          ← All Categories
-        </router-link>
-      </div>
-    </aside>
+      <!-- Left Navigation -->
+      <aside class="left-nav">
+        <nav class="nav-tree">
+          <router-link to="/notes" class="nav-root">All Notes</router-link>
+          <div class="nav-category">
+            <div class="category-header">{{ note.category }}</div>
+            <ul class="nav-list">
+              <li v-for="n in relatedNotes" :key="n.id">
+                <router-link 
+                  :to="'/notes/' + n.slug" 
+                  class="nav-item"
+                  active-class="active"
+                >
+                  {{ n.title }}
+                </router-link>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
 
-    <!-- Main Content -->
-    <main class="docs-content">
-      <div class="note-header">
-        <h1>{{ note.title }}</h1>
-        <div class="meta">
-          <span class="date" v-if="note.date">{{ new Date(note.date).toLocaleDateString() }}</span>
+      <!-- Content Area -->
+      <main class="content-area">
+        <nav class="breadcrumbs">
+          <router-link to="/">Home</router-link>
+          <span class="sep">/</span>
+          <router-link to="/notes">Notes</router-link>
+          <span class="sep">/</span>
+          <span class="current">{{ note.category }}</span>
+        </nav>
+
+        <article class="doc-body">
+          <header class="doc-header">
+            <h1 class="doc-title">{{ note.title }}</h1>
+            <div class="doc-meta">
+              <span class="meta-item">Article</span>
+              <span class="dot">•</span>
+              <span class="meta-item">{{ note.date }}</span>
+              <span class="dot">•</span>
+              <span class="meta-item">{{ readingTime }} min to read</span>
+            </div>
+          </header>
+
+          <div class="doc-content">
+            <div v-if="isLoading && !note.content" class="loading-state">
+              <div class="spinner"></div>
+              <span>Loading article...</span>
+            </div>
+            <MarkdownRenderer v-else :content="note.content" />
+          </div>
+        </article>
+      </main>
+
+      <!-- Right TOC -->
+      <aside class="right-toc">
+        <div class="toc-wrapper">
+          <h3 class="toc-title">In this article</h3>
+          <ul class="toc-list" v-if="toc.length">
+            <li v-for="item in toc" :key="item.id" 
+                :class="['toc-item', `level-${item.level}`, { active: activeId === item.id }]">
+              <a href="#" @click.prevent="scrollToHeader(item.id)">{{ item.text }}</a>
+            </li>
+          </ul>
         </div>
-      </div>
-      <div class="note-body">
-        <div v-if="isLoading && !note.content" class="loading-state">Loading content...</div>
-        <MarkdownRenderer v-else :content="note.content" />
-      </div>
-    </main>
+      </aside>
 
-    <!-- Right Sidebar: On this page (TOC) -->
-    <aside class="right-sidebar">
-      <div class="toc-container">
-        <h4 class="toc-title">On this page</h4>
-        <ul class="toc-list" v-if="toc.length">
-          <li 
-            v-for="(item, index) in toc" 
-            :key="index"
-            :class="['toc-item', `level-${item.level}`]"
-          >
-            <a href="#" @click.prevent="scrollToHeader(item.id)">{{ item.text }}</a>
-          </li>
-        </ul>
-        <p v-else class="no-toc">No subheadings</p>
-      </div>
-    </aside>
+    </div>
   </div>
-  
-  <div v-else class="not-found">
-    <h2>Note not found</h2>
-    <router-link to="/notes">Browse all notes</router-link>
+  <div v-else-if="!isLoading" class="not-found">
+    <h2>Article not found</h2>
+    <p>We're sorry, we couldn't find the page you're looking for.</p>
+    <router-link to="/notes" class="cf-btn">Browse all documentation</router-link>
   </div>
 </template>
 
 <style scoped>
-/* Layout */
-.docs-layout {
-  display: flex;
-  width: 100%; /* Full width */
-  margin: 0;
-  padding: 0;
-}
-
-.left-sidebar {
-  width: 20%; /* 20% width */
-  flex-shrink: 0;
-  position: sticky;
-  top: 64px; /* Matches Header Height */
-  height: calc(100vh - 64px);
-  overflow-y: auto;
-  padding: 32px 24px;
-  border-right: 1px solid #ebebeb;
+/* Cloudflare Docs Layout */
+.note-page {
   background-color: #fff;
-  box-sizing: border-box;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #000;
 }
 
-.right-sidebar {
-  width: 20%; /* 20% width */
-  flex-shrink: 0;
+.docs-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  width: 100%; /* Full width */
+  margin: 0;   /* Stick to edges */
+  gap: 0;
+}
+
+@media (max-width: 1200px) {
+  .docs-grid {
+    grid-template-columns: 240px 1fr;
+  }
+  .right-toc {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .docs-grid {
+    grid-template-columns: 1fr;
+  }
+  .left-nav {
+    display: none;
+  }
+}
+
+/* Right TOC */
+.right-toc {
+  height: calc(100vh - 64px);
   position: sticky;
   top: 64px;
-  height: calc(100vh - 64px);
-  padding-top: 32px;
-  padding-left: 24px; 
-  display: none;
-  font-size: 13px;
-  box-sizing: border-box;
+  padding: 32px 24px;
 }
 
-.docs-content {
-  width: 100%; /* Default 100% when sidebars hidden */
-  flex-shrink: 0;
-  flex-grow: 0;
-  margin: 0;
-  padding: 40px 48px 64px 48px;
-  box-sizing: border-box;
+.toc-wrapper {
+  border-left: 1px solid #edebe9;
+  padding-left: 16px;
 }
 
-@media (min-width: 1024px) {
-  .left-sidebar {
-     display: block; /* Ensure visible on desktop */
-  }
-  .right-sidebar {
-    display: block;
-  }
-  .docs-content {
-    width: 60%; /* 20+60+20 */
-  }
-}
-
-/* Left Sidebar Styles */
-.sidebar-group {
-  margin-bottom: 32px;
-}
-
-.sidebar-title {
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #36393a;
-  margin-bottom: 12px;
-}
-
-.sidebar-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar-link {
-  display: block;
-  padding: 6px 0;
-  font-size: 14px;
-  color: #595959;
-  text-decoration: none;
-  transition: color 0.1s;
-  border-left: 2px solid transparent;
-  padding-left: 12px;
-  margin-left: -14px;
-}
-
-.sidebar-link:hover {
-  color: #0051C3;
-  text-decoration: none;
-}
-
-.sidebar-link.active {
-  color: #0051C3;
-  font-weight: 600;
-  border-left-color: #0051C3;
-}
-
-.back-link {
-  font-size: 13px;
-  color: #595959;
-  text-decoration: none;
-}
-
-.back-link:hover {
-  text-decoration: underline;
-}
-
-/* Right Sidebar (TOC) Styles */
 .toc-title {
-  font-size: 12px;
-  text-transform: uppercase;
+  font-size: 14px;
   font-weight: 600;
-  color: #36393a;
-  margin: 0 0 12px 0;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  color: #242424;
 }
 
 .toc-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  border-left: 1px solid #ebebeb;
 }
 
 .toc-item {
   margin-bottom: 8px;
-  position: relative;
+  line-height: 1.4;
+}
+
+.toc-item.level-3 {
+  padding-left: 16px;
+}
+
+.toc-item a {
+  color: #605e5c;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.toc-item a:hover {
+  color: #0067b8;
+  text-decoration: underline;
+}
+
+/* Left Nav Styles */
+.left-nav {
+  border-right: 1px solid #edebe9;
+  height: calc(100vh - 64px);
+  position: sticky;
+  top: 64px;
+  overflow-y: auto;
+  padding: 32px 24px;
+}
+
+.nav-root {
+  display: block;
+  font-weight: 600;
+  color: #242424;
+  text-decoration: none;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.category-header {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #605e5c;
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  display: block;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #242424;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-bottom: 2px;
+}
+
+.nav-item:hover {
+  background-color: #f3f2f1;
+}
+
+.nav-item.active {
+  background-color: transparent; /* No background box */
+  color: #0051C3;
+  font-weight: 600;
+}
+
+/* Main Content Area */
+.content-area {
+  padding: 48px 64px 80px 64px;
+  max-width: 860px;
+  justify-self: center;
+  width: 100%;
+}
+
+@media (max-width: 1000px) {
+  .content-area {
+    padding: 32px 24px;
+  }
+}
+
+.breadcrumbs {
+  font-size: 14px;
+  color: #595959;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumbs a {
+  color: #0051C3;
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.sep {
+  color: #d9d9d9;
+}
+
+/* Article Header */
+.doc-header {
+  margin-bottom: 40px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 24px;
+}
+
+.doc-title {
+  font-size: 44px;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 16px 0;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.doc-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #605e5c;
+}
+
+.dot {
+  font-size: 8px;
+}
+
+/* Right TOC Area */
+.right-toc {
+  padding: 32px 24px;
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+}
+
+.toc-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #242424;
+  margin-bottom: 16px;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-left: 1px solid #edebe9;
+}
+
+.toc-item {
+  padding: 4px 0;
 }
 
 .toc-item a {
   display: block;
   font-size: 13px;
-  color: #595959;
+  color: #605e5c;
   text-decoration: none;
   padding-left: 16px;
-  line-height: 1.4;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
 }
 
 .toc-item a:hover {
   color: #0051C3;
 }
 
-/* Indent levels */
+.toc-item.active a {
+  color: #0051C3;
+  border-left-color: #0051C3;
+  font-weight: 600;
+}
+
 .level-3 {
   padding-left: 12px;
 }
 
-.no-toc {
-  font-size: 13px;
-  color: #999;
+/* Loading/Error */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: #605e5c;
+  gap: 16px;
 }
 
-/* Main Content Styles */
-.note-header {
-  margin-bottom: 32px;
-  border-bottom: 1px solid #ebebeb;
-  padding-bottom: 16px;
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #edebe9;
+  border-top-color: #0078d4;
+  border-radius: 50%;
+  animation: rotate 1s linear infinite;
 }
 
-h1 {
-  font-size: 36px;
-  font-weight: 700;
-  color: #36393a;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.02em;
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.meta {
-  font-size: 14px;
-  color: #767676;
+.cf-btn {
+  display: inline-block;
+  background-color: #0051C3;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 20px;
 }
 
-/* Mobile/Tablet Responsive (< 1024px) */
-@media (max-width: 1023px) {
-  .docs-layout {
-    flex-direction: column;
-    padding: 0;
-  }
-  
-  /* Sidebar is hidden by default, toggled via .mobile-open */
-  .left-sidebar {
-    display: none;
-    position: fixed;
-    top: 64px;
-    left: 0;
-    bottom: 0;
-    width: 280px; /* Fixed width sidebar overlay */
-    height: auto;
-    border-right: 1px solid #ebebeb;
-    background-color: #fff;
-    z-index: 1000;
-    box-shadow: 4px 0 16px rgba(0,0,0,0.1);
-  }
-  
-  .left-sidebar.mobile-open {
-    display: block;
-  }
-  
-  .docs-content {
-    width: 100%;
-    padding: 24px 24px 64px 24px;
-  }
+.cf-btn:hover {
+  background-color: #003681;
 }
 </style>

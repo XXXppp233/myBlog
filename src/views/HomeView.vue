@@ -1,4 +1,5 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import IpInfoCard from '../components/IpInfoCard.vue'
 import CloudflareVerification from '../components/CloudflareVerification.vue'
 </script>
@@ -10,10 +11,9 @@ import CloudflareVerification from '../components/CloudflareVerification.vue'
         <div class="hero-icon-wrapper">
           <svg viewBox="0 0 48 48" height="64" width="64" class="product-icon"><path d="M33.6,18.9c-1.3-4.1-5-7.1-9.5-7.1c-4.4,0-8.2,3-9.5,7.1c-1.6,0.3-3,1.3-3.7,2.8c-2,0.4-3.5,2.1-3.5,4.2c0,2.4,1.8,4.3,4.2,4.3h24.8c2.4,0,4.2-1.9,4.2-4.3c0-2-1.5-3.8-3.5-4.2C36.6,20.2,35.2,19.2,33.6,18.9z" fill="#F38020"></path></svg>
         </div>
-        <h1 class="product-title">My Blog</h1>
+        <h1 class="product-title">XXXppp233's blog in Cloudflare Style</h1>
         <p class="product-description">
-          A serverless developer platform for personal notes, ideas, and testing. <br>
-          Built on Cloudflare Pages, powered by Vue 3.
+          Connect, protect, and build everywhere
         </p>
         <div class="hero-actions">
           <router-link to="/notes" class="btn btn-primary">Start reading</router-link>
@@ -50,7 +50,7 @@ import CloudflareVerification from '../components/CloudflareVerification.vue'
           </div>
 
            <!-- Deploy Guide -->
-           <router-link to="/notes/deploy/deploy-pages" class="doc-card link-card">
+           <router-link to="/notes/cloudflare/deploy-pages" class="doc-card link-card">
             <h3 class="card-title">Deployment Guide</h3>
             <p class="card-desc">Learn how to deploy this blog to Cloudflare Pages.</p>
             <span class="card-link-text">Read guide &rarr;</span>
@@ -208,22 +208,12 @@ import CloudflareVerification from '../components/CloudflareVerification.vue'
 
 .card-slot {
   margin-top: 16px;
-  background-color: #f9f9f9;
-  border: 1px solid #eee;
-  padding: 16px;
+  padding: 8px 0;
   border-radius: 4px;
 }
 
 .center-slot {
   display: flex;
   justify-content: center;
-}
-
-/* Override IpInfoCard internal styles if needed for this context */
-:deep(.client-info-card) {
-  padding: 0 !important;
-}
-:deep(.card-header) {
-  border-bottom-color: #e0e0e0;
 }
 </style>

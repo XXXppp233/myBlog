@@ -6,8 +6,8 @@
         <div class="cf-success" v-else>✔</div>
       </div>
       <div class="cf-text-content">
-        <div class="cf-challenge-text">Success!</div>
-        <div class="cf-brand-text">Challenge passed</div>
+        <div class="cf-challenge-text">{{ verifying ? 'Verifying...' : 'Success!' }}</div>
+        <div class="cf-brand-text">{{ verifying ? 'This needs a little time.' : 'You are a real human!' }}</div>
       </div>
       <div class="cf-logo">
         <div class="cf-logo-icon">☁️</div>
@@ -34,34 +34,35 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
 .cf-turnstile-box {
-  width: 300px;
-  height: 65px;
+  width: 100%;
+  height: 80px;
   background-color: #fff;
   border: 1px solid #dcdcdc;
   border-radius: 4px;
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 16px;
   position: relative;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .cf-checkbox-wrapper {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
+  margin-right: 16px;
 }
 
 .cf-spinner {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border: 3px solid #f3f3f3;
   border-top: 3px solid #F38020;
   border-radius: 50%;
@@ -70,7 +71,7 @@ onMounted(() => {
 
 .cf-success {
   color: #00A96E;
-  font-size: 24px;
+  font-size: 32px;
   line-height: 1;
 }
 
@@ -84,13 +85,13 @@ onMounted(() => {
 }
 
 .cf-challenge-text {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: #333;
 }
 
 .cf-brand-text {
-  font-size: 12px;
+  font-size: 14px;
   color: #757575;
 }
 
@@ -98,18 +99,19 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .cf-logo-icon {
-  font-size: 18px;
-  color: #757575;
+  font-size: 22px;
+  color: #F38020;
   line-height: 1;
 }
 
 .cf-logo-text {
-  font-size: 9px;
-  color: #757575;
+  font-size: 10px;
+  font-weight: 700;
+  color: #444;
   margin-top: 2px;
 }
 </style>

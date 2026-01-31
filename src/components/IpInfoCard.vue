@@ -16,6 +16,12 @@ const fetchIpData = async () => {
 
     if (!data.success) throw new Error(data.message)
 
+    // Store country code for other components to use (e.g., Holiday Calendar)
+    if (data.country_code) {
+      localStorage.setItem('user_country_code', data.country_code)
+      window.dispatchEvent(new CustomEvent('country-code-ready', { detail: data.country_code }))
+    }
+
     // Mapping ipwho.is fields to our component's expected structure
     ipData.value = {
       ip: data.ip,
@@ -78,12 +84,7 @@ const toggleVisibility = () => {
 </script>
 
 <template>
-  <div class="cf-card-simple client-info-card">
-    <div class="card-header">
-      <h3 class="cf-text-label">Client Info</h3>
-      <button @click="fetchIpData" class="refresh-btn" title="Refresh">↻</button>
-    </div>
-
+  <div class="client-info-display h-full">
     <div class="card-content" v-if="loading">
       <div class="spinner">Loading...</div>
     </div>
@@ -136,54 +137,22 @@ const toggleVisibility = () => {
 </template>
 
 <style scoped>
-/* Cloudflare-like minimal style */
-.client-info-card {
+/* Inherit card styles from global or parent usage, but define local overrides */
+.client-info-display {
+  /* Ensure it matches the ms-card style if used independently */
   background: transparent;
   padding: 0;
-  border: none;
-  box-shadow: none;
-}
-
-.card-header {
+  transition: box-shadow 0.2s;
+  height: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 8px;
-  flex-wrap: nowrap; /* Prevent wrapping */
-}
-
-.cf-text-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-  white-space: nowrap; /* Keep label on one line */
-}
-
-.refresh-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: #F38020;
-  transition: transform 0.3s ease;
-  flex-shrink: 0; /* Prevent button from shrinking/wrapping */
-  padding: 0 4px; /* Minimal padding */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.refresh-btn:hover {
-  transform: rotate(180deg);
+  flex-direction: column;
 }
 
 .info-grid {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1; /* Allow content to grow but card remains flex */
 }
 
 .info-row {
@@ -195,35 +164,28 @@ const toggleVisibility = () => {
 .label-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   line-height: 1;
 }
 
 .label {
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
+  font-size: 14px;
+  color: #36393a;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .flag-icon {
-  font-size: 14px;
+  font-size: 24px;
   display: inline-flex;
   align-items: center;
 }
 
 .value {
-  font-size: 15px;
-  color: #1a1a1a;
+  font-size: 18px;
+  color: #36393a;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-.ip-address {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
-  background-color: #f4f4f4;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 13px;
+  font-family: 'Consolas', monospace; /* Monospace for IP looks better */
 }
 
 .value-container {
@@ -237,21 +199,19 @@ const toggleVisibility = () => {
   cursor: pointer;
   padding: 0;
   margin: 0;
-  font-size: 12px;
-  opacity: 0.5;
+  font-size: 14px;
+  opacity: 0.6;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #F38020;
+  color: #0078d4;
 }
 
 .icon-btn:hover {
   opacity: 1;
 }
 
-.spinner, .error-msg {
-  font-size: 14px;
-  color: #666;
-  padding: 10px 0;
+.ip-address {
+  font-weight: 700;
 }
 </style>
