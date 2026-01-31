@@ -137,14 +137,15 @@ const scrollToHeader = (id) => {
 }
 
 .right-sidebar {
-  width: 240px;
+  width: 200px; /* Reduced width to bring it closer */
   flex-shrink: 0;
   position: sticky;
   top: 64px;
   height: calc(100vh - 64px);
   padding-top: 32px;
-  padding-right: 24px;
+  padding-left: 0; /* Align left edge */
   display: none;
+  font-size: 13px;
 }
 
 .docs-content {
