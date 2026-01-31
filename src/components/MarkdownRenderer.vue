@@ -16,10 +16,37 @@ renderer.heading = function({ text, depth }) {
   return `<h${depth} id="${id}">${text}</h${depth}>`
 }
 
-renderer.code = function({ text, lang }) {
-  if (lang === 'Embed') {
-    return text;
+// Extension for ::: embed syntax
+const embedExtension = {
+  name: 'embed',
+  level: 'block',
+  start(src) { return src.match(/^:{3,}/)?.index; },
+  tokenizer(src) {
+    const rule = /^:{3,}\s*embed\s*(\n[\s\S]*?)\n:{3,}(?:\n+|$)/;
+    const match = rule.exec(src);
+    if (match) {
+      return {
+        type: 'embed',
+        raw: match[0],
+        text: match[1].trim()
+      };
+    }
+  },
+  renderer(token) {
+    return token.text;
   }
+};
+
+// Override html renderer to escape raw HTML
+renderer.html = function({ text }) {
+  return text.replace(/&/g, '&amp;')
+             .replace(/</g, '&lt;')
+             .replace(/>/g, '&gt;')
+             .replace(/"/g, '&quot;')
+             .replace(/'/g, '&#39;');
+}
+
+renderer.code = function({ text, lang }) {
   // Default code block rendering
   const escaped = text.replace(/&/g, '&amp;')
                       .replace(/</g, '&lt;')
@@ -34,8 +61,11 @@ const html = computed(() => {
   // Remove content between first --- and second ---
   const content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')
   
-  // Use the custom renderer
-  marked.use({ renderer })
+  // Use the custom renderer and extension
+  marked.use({ 
+    renderer, 
+    extensions: [embedExtension] 
+  })
   return marked(content)
 })
 </script>
