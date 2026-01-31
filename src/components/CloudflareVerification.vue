@@ -10,7 +10,7 @@
         <div class="cf-brand-text">{{ verifying ? 'This needs a little time.' : 'You are a real human!' }}</div>
       </div>
       <div class="cf-logo">
-        <div class="cf-logo-icon">☁️</div>
+        <img src="/favicon.ico" class="cf-logo-icon" alt="Logo" />
         <div class="cf-logo-text">Cloudflare</div>
       </div>
     </div>
@@ -103,9 +103,10 @@ onMounted(() => {
 }
 
 .cf-logo-icon {
-  font-size: 22px;
-  color: #F38020;
-  line-height: 1;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  margin-bottom: 2px;
 }
 
 .cf-logo-text {

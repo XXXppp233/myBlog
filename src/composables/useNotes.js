@@ -9,6 +9,7 @@ export function useNotes() {
     if (isLoaded.value || isLoading.value) return
     isLoading.value = true
     try {
+      // Using 'change' branch as the source of truth for blog.xml as established
       const response = await fetch('https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/blog.xml')
       const text = await response.text()
       const parser = new DOMParser()
@@ -27,12 +28,13 @@ export function useNotes() {
         const slug = path.replace(/\.md$/i, '')
         
         return {
+          id: slug, // Map slug to id for compatibility
           slug,
           title,
           category,
-          mtime: mtime ? new Date(mtime) : null,
+          date: mtime ? new Date(mtime).toISOString().split('T')[0] : '', // Format date for Azure view
           url,
-          path, // keep original path if needed
+          path,
           content: null // loaded lazily
         }
       })
@@ -51,7 +53,14 @@ export function useNotes() {
   }
 
   const getNoteBySlug = (slug) => {
+    // Azure view called it getNoteById, passing slug now
     return notes.value.find(n => n.slug === slug)
+  }
+
+  const getNotesByCategory = (category) => {
+     // Filter notes by category
+     if (!category) return notes.value
+     return notes.value.filter(n => n.category === category)
   }
 
   const fetchNoteContent = async (note) => {
@@ -75,8 +84,10 @@ export function useNotes() {
     notes,
     categories,
     getNoteBySlug,
+    // Alias for backward compatibility if needed, though unused
+    getNoteById: getNoteBySlug,
+    getNotesByCategory,
     fetchNoteContent,
-    initNotes,
-    isLoaded
+    isLoading
   }
 }

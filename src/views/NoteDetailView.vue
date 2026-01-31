@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router'
 import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
+import LeftIndex from '../components/LeftIndex.vue'
 import { useNotes } from '../composables/useNotes'
 
 const route = useRoute()
@@ -99,25 +100,17 @@ const readingTime = computed(() => {
     <div class="docs-grid">
       
       <!-- Left Navigation -->
-      <aside class="left-nav">
-        <nav class="nav-tree">
-          <router-link to="/notes" class="nav-root">All Notes</router-link>
-          <div class="nav-category">
-            <div class="category-header">{{ note.category }}</div>
-            <ul class="nav-list">
-              <li v-for="n in relatedNotes" :key="n.id">
-                <router-link 
-                  :to="'/notes/' + n.slug" 
-                  class="nav-item"
-                  active-class="active"
-                >
-                  {{ n.title }}
-                </router-link>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </aside>
+      <LeftIndex :header="note.category">
+        <li v-for="n in relatedNotes" :key="n.id">
+          <router-link 
+            :to="'/notes/' + n.slug" 
+            class="nav-item"
+            active-class="active"
+          >
+            {{ n.title }}
+          </router-link>
+        </li>
+      </LeftIndex>
 
       <!-- Content Area -->
       <main class="content-area">
@@ -184,7 +177,7 @@ const readingTime = computed(() => {
 
 .docs-grid {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
+  grid-template-columns: 275px 1fr 280px;
   width: 100%; /* Full width */
   margin: 0;   /* Stick to edges */
   gap: 0;
@@ -192,7 +185,7 @@ const readingTime = computed(() => {
 
 @media (max-width: 1200px) {
   .docs-grid {
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 275px 1fr;
   }
   .right-toc {
     display: none;
@@ -253,60 +246,6 @@ const readingTime = computed(() => {
 .toc-item a:hover {
   color: #0067b8;
   text-decoration: underline;
-}
-
-/* Left Nav Styles */
-.left-nav {
-  border-right: 1px solid #edebe9;
-  height: calc(100vh - 64px);
-  position: sticky;
-  top: 64px;
-  overflow-y: auto;
-  padding: 32px 24px;
-}
-
-.nav-root {
-  display: block;
-  font-weight: 600;
-  color: #242424;
-  text-decoration: none;
-  margin-bottom: 24px;
-  font-size: 14px;
-}
-
-.category-header {
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #605e5c;
-  margin-bottom: 12px;
-  letter-spacing: 0.05em;
-}
-
-.nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.nav-item {
-  display: block;
-  padding: 6px 12px;
-  font-size: 14px;
-  color: #242424;
-  text-decoration: none;
-  border-radius: 4px;
-  margin-bottom: 2px;
-}
-
-.nav-item:hover {
-  background-color: #f3f2f1;
-}
-
-.nav-item.active {
-  background-color: transparent; /* No background box */
-  color: #0051C3;
-  font-weight: 600;
 }
 
 /* Main Content Area */

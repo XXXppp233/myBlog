@@ -1,201 +1,197 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useNotes } from '../composables/useNotes'
+import LeftIndex from '../components/LeftIndex.vue'
 
-const { notes, categories } = useNotes()
-const selectedCategory = ref('All')
+const { categories, getNotesByCategory } = useNotes()
+// Debug logging
+console.log('useNotes initialized', { categories, getNotesByCategory })
+const selectedCategory = ref(null)
 
-const filteredNotes = computed(() => {
-  if (selectedCategory.value === 'All') return notes.value
-  return notes.value.filter(n => n.category === selectedCategory.value)
+// Sorting state
+const sortField = ref('date')
+const sortDirection = ref('desc')
+
+const sortNotes = (field) => {
+  if (sortField.value === field) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = field
+    sortDirection.value = field === 'date' ? 'desc' : 'asc'
+  }
+}
+
+const displayedNotes = computed(() => {
+  const notes = getNotesByCategory(selectedCategory.value)
+  return [...notes].sort((a, b) => {
+    let modifier = sortDirection.value === 'asc' ? 1 : -1
+    // Handle date comparison specially if needed, but string comparison works for ISO dates
+    if (a[sortField.value] < b[sortField.value]) return -1 * modifier
+    if (a[sortField.value] > b[sortField.value]) return 1 * modifier
+    return 0
+  })
 })
 
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(date)
+const selectCategory = (category) => {
+  selectedCategory.value = category
 }
 </script>
 
 <template>
-  <div class="notes-container">
-    <aside class="sidebar">
-      <div class="sidebar-content">
-        <div class="sidebar-header">Categories</div>
-        <ul class="nav-list">
-          <li 
-            :class="{ active: selectedCategory === 'All' }"
-            @click="selectedCategory = 'All'"
+  <div class="notes-page">
+    <div class="docs-grid">
+      <!-- Left Sidebar: Categories -->
+      <LeftIndex header="Categories">
+        <li class="nav-tree-item">
+          <button
             class="nav-item"
+            :class="{ active: selectedCategory === null }"
+            @click="selectCategory(null)"
           >
-            All Notes
-          </li>
-          <li 
-            v-for="cat in categories" 
-            :key="cat"
-            :class="{ active: selectedCategory === cat }"
-            @click="selectedCategory = cat"
+            All Documents
+          </button>
+        </li>
+        <li v-for="cat in categories" :key="cat" class="nav-tree-item">
+          <button
             class="nav-item"
+            :class="{ active: selectedCategory === cat }"
+            @click="selectCategory(cat)"
           >
             {{ cat }}
-          </li>
-        </ul>
-      </div>
-    </aside>
+          </button>
+        </li>
+      </LeftIndex>
 
-    <main class="notes-main">
-      <div class="notes-list">
-        <div v-for="note in filteredNotes" :key="note.path" class="note-card">
-          <router-link :to="'/notes/' + note.slug" class="note-link">
-            <div class="note-content">
-              <h4 class="note-title">{{ note.title }}</h4>
-            </div>
-            <div class="note-meta-column">
-              <div class="meta-top">
-                <span v-if="selectedCategory === 'All'" class="category-tag">{{ note.category }}</span>
+      <!-- Main Content -->
+      <main class="content-area">
+        <div class="list-surface">
+          <!-- Header removed for Card Layout -->
+          
+          <div class="list-body">
+            <router-link
+              v-for="note in displayedNotes"
+              :key="note.id"
+              :to="`/notes/${note.id}`"
+              class="list-row"
+            >
+              <div class="row-main">
+                <div class="col-title"><span class="file-icon">📄</span> {{ note.title }}</div>
               </div>
-              <div class="meta-bottom">
-                <span class="date-text" v-if="note.mtime">{{ formatDate(note.mtime) }}</span>
+              
+              <div class="row-meta">
+                <div class="meta-cat" v-if="!selectedCategory">
+                  {{ note.category }}
+                </div>
+                <div class="meta-date">{{ note.date }}</div>
               </div>
-            </div>
-          </router-link>
+            </router-link>
+
+            <div v-if="displayedNotes.length === 0" class="empty-state">No notes found.</div>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.notes-container {
-  display: flex;
-  width: 100%;
-  min-height: calc(100vh - 64px); /* Subtract header height */
+.notes-page {
   background-color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  /* Font handled by Global/App.vue - Segoe UI removed */
+  color: #242424;
 }
 
-.sidebar {
-  width: 280px;
-  flex-shrink: 0;
-  border-right: 1px solid #ebebeb;
-  height: calc(100vh - 64px);
-  position: sticky;
-  top: 64px;
-  overflow-y: auto;
-  padding: 32px 0 32px 24px; /* Left padding matching nav logo */
-}
-
-.sidebar-header {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #595959;
-  margin-bottom: 8px;
-  padding-left: 0;
-}
-
-.nav-list {
-  list-style: none;
-  padding: 0;
+.docs-grid {
+  display: grid;
+  grid-template-columns: 275px 1fr;
+  max-width: 1400px;
   margin: 0;
+  gap: 0;
 }
 
-.nav-item {
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #36393a;
-  border-left: 1px solid transparent;
-  margin-left: -1px; /* Overlap border */
+@media (max-width: 900px) {
+  .docs-grid {
+    grid-template-columns: 1fr;
+  }
+  .left-nav {
+    display: none;
+  }
 }
 
-.nav-item:hover {
-  color: #0051C3;
+.list-surface {
+  background: transparent;
+  border: none;
 }
 
-.nav-item.active {
-  color: #0051C3;
-  font-weight: 600;
-}
-
-.notes-main {
-  flex-grow: 1;
-  padding: 40px 64px;
-  max-width: 960px; /* Constrain width of list itself so cards aren't huge */
-}
-
-.notes-list {
+.list-body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 32px 0; /* Add vertical padding to the list container */
 }
 
-.note-card {
-  background: white;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  transition: all 0.2s;
-  height: 80px; /* Fixed height for consistency */
-}
-
-.note-card:hover {
-  border-color: #b3b3b3;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.note-link {
+.list-row {
   display: flex;
   justify-content: space-between;
-  align-items: stretch;
-  padding: 0 24px;
+  align-items: center;
+  padding: 0 24px; /* Move padding to horizontal only */
+  height: 96px;    /* Fixed height */
+  margin: 0 24px;  /* Margin to separate from divider */
+  background: white;
+  border: 1px solid #ebebeb;
+  border-radius: 8px; /* Large rounded corners */
   text-decoration: none;
   color: inherit;
-  height: 100%;
+  transition: all 0.2s ease;
 }
 
-.note-content {
+.list-row:hover {
+  border-color: #0051C3;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transform: translateY(-1px);
+}
+
+.col-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #36393a;
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
-.note-title {
-  margin: 0;
-  font-size: 18px;
-  color: #1a1a1a;
-  font-weight: 600;
+.file-icon {
+  font-size: 20px;
 }
 
-.note-meta-column {
+.row-meta {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: flex-end;
-  gap: 4px;
+  gap: 8px;
   min-width: 120px;
 }
 
-.meta-top {
-  height: 20px; /* Reserve space */
-  display: flex;
-  align-items: center;
-}
-
-.meta-bottom {
-  height: 20px;
-  display: flex;
-  align-items: center;
-}
-
-.category-tag {
+.meta-cat {
   font-size: 12px;
-  background-color: #f2f8ff;
   color: #0051C3;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: #f2f7fc;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-.date-text {
-  font-size: 13px;
-  color: #595959;
+.meta-date {
+  font-size: 14px;
+  color: #767676;
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: #605e5c;
 }
 </style>
