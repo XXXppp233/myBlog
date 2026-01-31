@@ -39,7 +39,7 @@ const alertExtension = {
   level: 'block',
   start(src) { return src.match(/^:{3,}/)?.index; },
   tokenizer(src) {
-    const rule = /^:{3,}\s*(note|important|warning|tip)\s*(\n[\s\S]*?)\n:{3,}(?:\n+|$)/i;
+    const rule = /^:{3,}\s*(note|important|warning|tip|alert)\s*(\n[\s\S]*?)\n:{3,}(?:\n+|$)/i;
     const match = rule.exec(src);
     if (match) {
       return {
@@ -51,10 +51,22 @@ const alertExtension = {
     }
   },
   renderer(token) {
-    const title = token.variant.charAt(0).toUpperCase() + token.variant.slice(1);
+    const variantMap = {
+      'note': { title: 'Note', icon: 'ⓘ' },
+      'tip': { title: 'Tip', icon: '💡' },
+      'important': { title: 'Important', icon: '★' },
+      'warning': { title: 'Warning', icon: '⚠' },
+      'alert': { title: 'Note', icon: 'ⓘ' } // Map alert to Note style in MS Learn
+    };
+    
+    const config = variantMap[token.variant] || variantMap['note'];
     const content = marked.parse(token.text);
-    return `<div class="ms-alert alert-${token.variant}">
-      <p class="alert-title">${title}</p>
+    
+    return `<div class="ms-alert alert-${token.variant === 'alert' ? 'note' : token.variant}">
+      <p class="alert-title">
+        <span class="alert-icon">${config.icon}</span>
+        ${config.title}
+      </p>
       <div class="alert-content">${content}</div>
     </div>`;
   }
@@ -163,6 +175,8 @@ const htmlContent = computed(() => {
 }
 
 .alert-title {
+  display: flex;
+  align-items: center;
   font-weight: 600;
   font-size: 14px;
   margin: 0 0 8px 0 !important;
@@ -170,10 +184,33 @@ const htmlContent = computed(() => {
   letter-spacing: 0.05em;
 }
 
-.alert-note { border-left-color: #0067b8; background-color: #eff6fc; }
-.alert-important { border-left-color: #0078d4; background-color: #f3f2f1; }
-.alert-warning { border-left-color: #ffd335; background-color: #fff9e6; }
-.alert-tip { border-left-color: #107c10; background-color: #f1faf1; }
+.alert-icon {
+  margin-right: 8px;
+  font-size: 16px;
+  font-style: normal;
+}
+
+.alert-note { 
+  border-left-color: #0067b8; 
+  background-color: #eff6fc; 
+  color: #002050;
+}
+.alert-important { 
+  border-left-color: #0078d4; 
+  background-color: #f3f2f1; 
+}
+.alert-warning { 
+  border-left-color: #f7630c; 
+  background-color: #fff4ce; 
+}
+.alert-tip { 
+  border-left-color: #107c10; 
+  background-color: #f1faf1; 
+}
+
+.alert-content {
+  font-size: 15px;
+}
 
 .alert-content p:last-child {
   margin-bottom: 0;
