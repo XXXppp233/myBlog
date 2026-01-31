@@ -52,7 +52,7 @@ export function useNotes() {
     initNotes()
   }
 
-  const getNoteById = (slug) => {
+  const getNoteBySlug = (slug) => {
     // Azure view called it getNoteById, passing slug now
     return notes.value.find(n => n.slug === slug)
   }
@@ -82,7 +82,9 @@ export function useNotes() {
   return {
     notes,
     categories,
-    getNoteById,
+    getNoteBySlug,
+    // Alias for backward compatibility if needed, though unused
+    getNoteById: getNoteBySlug,
     getNotesByCategory,
     fetchNoteContent,
     isLoading

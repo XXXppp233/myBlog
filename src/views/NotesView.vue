@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useNotes } from '../composables/useNotes'
+import LeftIndex from '../components/LeftIndex.vue'
 
 const { categories, getNotesByCategory } = useNotes()
 const selectedCategory = ref(null)
@@ -38,43 +39,29 @@ const selectCategory = (category) => {
   <div class="notes-page">
     <div class="docs-grid">
       <!-- Left Sidebar: Categories -->
-      <aside class="left-nav">
-        <nav class="nav-tree">
-          <div class="nav-root">All Documentation</div>
-          <div class="nav-category">
-            <div class="category-header">Categories</div>
-            <ul class="nav-list">
-              <li>
-                <button
-                  class="nav-item"
-                  :class="{ active: selectedCategory === null }"
-                  @click="selectCategory(null)"
-                >
-                  All Notes
-                </button>
-              </li>
-              <li v-for="cat in categories" :key="cat">
-                <button
-                  class="nav-item"
-                  :class="{ active: selectedCategory === cat }"
-                  @click="selectCategory(cat)"
-                >
-                  {{ cat }}
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </aside>
+      <LeftIndex header="Categories">
+        <li class="nav-tree-item">
+          <button
+            class="nav-item"
+            :class="{ active: selectedCategory === null }"
+            @click="selectCategory(null)"
+          >
+            All Notes
+          </button>
+        </li>
+        <li v-for="cat in categories" :key="cat" class="nav-tree-item">
+          <button
+            class="nav-item"
+            :class="{ active: selectedCategory === cat }"
+            @click="selectCategory(cat)"
+          >
+            {{ cat }}
+          </button>
+        </li>
+      </LeftIndex>
 
       <!-- Main Content -->
       <main class="content-area">
-        <div class="toolbar">
-          <h2 class="page-title">
-            {{ selectedCategory ? selectedCategory : 'All' }} Notes
-          </h2>
-        </div>
-
         <div class="list-surface">
           <div class="list-header">
             <div
@@ -135,7 +122,7 @@ const selectCategory = (category) => {
 .notes-page {
   background-color: #fff;
   min-height: 100vh;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  /* Font handled by Global/App.vue */
   color: #242424;
 }
 
@@ -154,86 +141,6 @@ const selectCategory = (category) => {
   .left-nav {
     display: none;
   }
-}
-
-/* Sidebar Styles */
-.left-nav {
-  border-right: 1px solid #edebe9;
-  height: calc(100vh - 48px);
-  position: sticky;
-  top: 48px;
-  overflow-y: auto;
-  padding: 32px 24px;
-}
-
-.nav-root {
-  font-weight: 600;
-  color: #242424;
-  margin-bottom: 24px;
-  font-size: 14px;
-}
-
-.category-header {
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #605e5c;
-  margin-bottom: 12px;
-  letter-spacing: 0.05em;
-}
-
-.nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.nav-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 6px 12px;
-  font-size: 14px;
-  color: #242424;
-  cursor: pointer;
-  border-radius: 4px;
-  margin-bottom: 2px;
-  font-family: inherit;
-}
-
-.nav-item:hover {
-  background-color: #f3f2f1;
-}
-
-.nav-item.active {
-  background-color: #eff6fc;
-  color: #0078d4;
-  font-weight: 600;
-}
-
-/* Content Area */
-.content-area {
-  padding: 32px 64px 80px 64px;
-  width: 100%;
-}
-
-@media (max-width: 1000px) {
-  .content-area {
-    padding: 32px 24px;
-  }
-}
-
-.toolbar {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: 32px;
-  font-weight: 600;
-  color: #242424;
-  margin: 0;
 }
 
 .list-surface {

@@ -2,14 +2,15 @@
 import { useRoute } from 'vue-router'
 import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
+import LeftIndex from '../components/LeftIndex.vue'
 import { useNotes } from '../composables/useNotes'
 
 const route = useRoute()
-const { getNoteById, fetchNoteContent, isLoading, notes } = useNotes()
+const { getNoteBySlug, fetchNoteContent, isLoading, notes } = useNotes()
 
 const noteSlug = computed(() => route.params.slug)
 const slugStr = computed(() => Array.isArray(noteSlug.value) ? noteSlug.value.join('/') : noteSlug.value)
-const note = computed(() => getNoteById(slugStr.value))
+const note = computed(() => getNoteBySlug(slugStr.value))
 
 // Sidebar: Related notes in same category
 const relatedNotes = computed(() => {
@@ -94,30 +95,30 @@ const readingTime = computed(() => {
 </script>
 
 <template>
-  <div class="note-page" v-if="note">
+  <div v-if="isLoading && !note" class="loading-state full-page">
+    <div class="spinner"></div>
+    <span>Loading...</span>
+  </div>
+  <div v-else-if="!note" class="error-state full-page">
+    <h2>Note not found</h2>
+    <router-link to="/notes">Return to Notes</router-link>
+  </div>
+  <div class="note-page" v-else>
     <!-- Main Docs Grid -->
     <div class="docs-grid">
       
       <!-- Left Navigation -->
-      <aside class="left-nav">
-        <nav class="nav-tree">
-          <router-link to="/notes" class="nav-root">All Notes</router-link>
-          <div class="nav-category">
-            <div class="category-header">{{ note.category }}</div>
-            <ul class="nav-list">
-              <li v-for="n in relatedNotes" :key="n.id">
-                <router-link 
-                  :to="'/notes/' + n.slug" 
-                  class="nav-item"
-                  active-class="active"
-                >
-                  {{ n.title }}
-                </router-link>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </aside>
+      <LeftIndex :header="note.category">
+        <li v-for="n in relatedNotes" :key="n.id">
+          <router-link 
+            :to="'/notes/' + n.slug" 
+            class="nav-item"
+            active-class="active"
+          >
+            {{ n.title }}
+          </router-link>
+        </li>
+      </LeftIndex>
 
       <!-- Content Area -->
       <main class="content-area">
@@ -166,27 +167,22 @@ const readingTime = computed(() => {
 
     </div>
   </div>
-  <div v-else-if="!isLoading" class="not-found">
-    <h2>Article not found</h2>
-    <p>We're sorry, we couldn't find the page you're looking for.</p>
-    <router-link to="/notes" class="ms-btn">Browse all documentation</router-link>
-  </div>
 </template>
 
 <style scoped>
-/* Microsoft Learn Layout */
+/* Cloudflare Docs Layout */
 .note-page {
   background-color: #fff;
   min-height: 100vh;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  color: #242424;
+  /* Font handled by Global/App.vue */
+  color: #000;
 }
 
 .docs-grid {
   display: grid;
   grid-template-columns: 240px 1fr 240px;
-  max-width: 1600px;
-  margin: 0 auto;
+  max-width: 1400px; /* Match NotesView */
+  margin: 0 auto;    /* Match NotesView */
   gap: 0;
 }
 
@@ -199,7 +195,7 @@ const readingTime = computed(() => {
   }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .docs-grid {
     grid-template-columns: 1fr;
   }
@@ -255,64 +251,10 @@ const readingTime = computed(() => {
   text-decoration: underline;
 }
 
-/* Left Nav Styles */
-.left-nav {
-  border-right: 1px solid #edebe9;
-  height: calc(100vh - 48px);
-  position: sticky;
-  top: 48px;
-  overflow-y: auto;
-  padding: 32px 24px;
-}
-
-.nav-root {
-  display: block;
-  font-weight: 600;
-  color: #242424;
-  text-decoration: none;
-  margin-bottom: 24px;
-  font-size: 14px;
-}
-
-.category-header {
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #605e5c;
-  margin-bottom: 12px;
-  letter-spacing: 0.05em;
-}
-
-.nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.nav-item {
-  display: block;
-  padding: 6px 12px;
-  font-size: 14px;
-  color: #242424;
-  text-decoration: none;
-  border-radius: 4px;
-  margin-bottom: 2px;
-}
-
-.nav-item:hover {
-  background-color: #f3f2f1;
-}
-
-.nav-item.active {
-  background-color: #eff6fc;
-  color: #0078d4;
-  font-weight: 600;
-}
-
 /* Main Content Area */
 .content-area {
   padding: 32px 64px 80px 64px;
-  max-width: 960px;
+  max-width: 860px;
   justify-self: center;
   width: 100%;
 }
@@ -324,8 +266,8 @@ const readingTime = computed(() => {
 }
 
 .breadcrumbs {
-  font-size: 12px;
-  color: #605e5c;
+  font-size: 14px;
+  color: #595959;
   margin-bottom: 24px;
   display: flex;
   align-items: center;
@@ -333,30 +275,32 @@ const readingTime = computed(() => {
 }
 
 .breadcrumbs a {
-  color: #605e5c;
+  color: #0051C3;
   text-decoration: none;
 }
 
 .breadcrumbs a:hover {
-  color: #0078d4;
   text-decoration: underline;
 }
 
 .sep {
-  color: #c8c6c4;
+  color: #d9d9d9;
 }
 
 /* Article Header */
 .doc-header {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 24px;
 }
 
 .doc-title {
-  font-size: 40px;
-  font-weight: 600;
-  color: #242424;
+  font-size: 44px;
+  font-weight: 700;
+  color: #000;
   margin: 0 0 16px 0;
-  line-height: 1.2;
+  line-height: 1.1;
+  letter-spacing: -1px;
 }
 
 .doc-meta {
@@ -409,13 +353,12 @@ const readingTime = computed(() => {
 }
 
 .toc-item a:hover {
-  color: #0078d4;
-  background-color: #f3f2f1;
+  color: #0051C3;
 }
 
 .toc-item.active a {
-  color: #0078d4;
-  border-left-color: #0078d4;
+  color: #0051C3;
+  border-left-color: #0051C3;
   font-weight: 600;
 }
 
@@ -448,18 +391,45 @@ const readingTime = computed(() => {
   to { transform: rotate(360deg); }
 }
 
-.ms-btn {
+.cf-btn {
   display: inline-block;
-  background-color: #0078d4;
+  background-color: #0051C3;
   color: white;
   padding: 8px 20px;
-  border-radius: 2px;
+  border-radius: 4px;
   text-decoration: none;
   font-weight: 600;
   margin-top: 20px;
 }
 
-.ms-btn:hover {
-  background-color: #005a9e;
+.cf-btn:hover {
+  background-color: #003681;
+}
+
+.loading-state.full-page,
+.error-state.full-page {
+  min-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.error-state h2 {
+  margin-bottom: 16px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.error-state a {
+  color: #0078d4;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.error-state a:hover {
+  text-decoration: underline;
 }
 </style>
