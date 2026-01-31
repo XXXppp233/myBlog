@@ -1,0 +1,14 @@
+# Cloudflare Pages 配置
+name = "myBlog"
+type = "javascript"
+account_id = ""
+route = ""
+zone_id = ""
+
+[build]
+command = "npm run build"
+cwd = "./"
+watch_paths = ["src/**/*.{js,vue,css}"]
+
+[env.production]
+# 生产环境配置
