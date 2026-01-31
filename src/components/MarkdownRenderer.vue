@@ -10,7 +10,10 @@ const props = defineProps({
 })
 
 const html = computed(() => {
-  return marked(props.content || '')
+  // Simple frontmatter removal:
+  // Remove content between first --- and second ---
+  const content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')
+  return marked(content)
 })
 </script>
 
