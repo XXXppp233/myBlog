@@ -1,10 +1,9 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import NotesView from '../views/NotesView.vue'
-import NoteDetailView from '../views/NoteDetailView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
@@ -14,12 +13,13 @@ const router = createRouter({
     {
       path: '/notes',
       name: 'notes',
-      component: NotesView
-    },
-    {
-      path: '/notes/:slug(.*)',
-      name: 'note-detail',
-      component: NoteDetailView
+      component: NotesView,
+      children: [
+        {
+          path: ':slug(.*)?',
+          component: NotesView
+        }
+      ]
     }
   ]
 })
