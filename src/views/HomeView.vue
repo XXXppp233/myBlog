@@ -50,7 +50,7 @@ import CloudflareVerification from '../components/CloudflareVerification.vue'
           </div>
 
            <!-- Deploy Guide -->
-           <router-link to="/notes/cloudflare/deploy-pages" class="doc-card link-card">
+           <router-link to="/notes/deploy/deploy-pages" class="doc-card link-card">
             <h3 class="card-title">Deployment Guide</h3>
             <p class="card-desc">Learn how to deploy this blog to Cloudflare Pages.</p>
             <span class="card-link-text">Read guide &rarr;</span>

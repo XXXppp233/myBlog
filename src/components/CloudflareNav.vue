@@ -19,13 +19,6 @@ const uiStore = useUIStore()
         <router-link to="/" class="cf-link" active-class="active">Home</router-link>
         <router-link to="/notes" class="cf-link" active-class="active">Notes</router-link>
       </div>
-      <div class="cf-search">
-         <div class="search-fake-input">
-           <span class="search-icon">🔍</span>
-           <span>Search...</span>
-           <span class="search-key">Ctrl+K</span>
-         </div>
-      </div>
     </div>
   </nav>
 </template>
@@ -118,49 +111,5 @@ const uiStore = useUIStore()
 
 .cf-link.active {
   color: #F38020;
-}
-
-.cf-search {
-  display: none; /* Hidden on small screens */
-}
-
-@media (min-width: 768px) {
-  .cf-search {
-    display: block;
-  }
-}
-
-.search-fake-input {
-  background-color: #f2f2f2;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 6px 12px;
-  width: 200px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #767676;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.search-fake-input:hover {
-  background-color: #e6e6e6;
-  border-color: #d6d6d6;
-}
-
-.search-icon {
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-.search-key {
-  margin-left: auto;
-  font-size: 11px;
-  border: 1px solid #d6d6d6;
-  border-radius: 3px;
-  padding: 1px 4px;
-  color: #999;
 }
 </style>

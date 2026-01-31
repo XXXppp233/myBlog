@@ -58,8 +58,12 @@ renderer.code = function({ text, lang }) {
 
 
 const html = computed(() => {
-  // Remove content between first --- and second ---
-  const content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')
+  // 1. Remove frontmatter (content between first --- and second ---)
+  let content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')
+  
+  // 2. Remove the first H1 tag if it matches the start of the content 
+  // (to avoid double title when NoteDetailView already renders it)
+  content = content.replace(/^#\s+.*(?:\n|$)/, '')
   
   // Use the custom renderer and extension
   marked.use({ 
