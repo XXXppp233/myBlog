@@ -1,12 +1,12 @@
 <template>
   <nav class="ms-nav">
     <div class="ms-nav-container">
-      <div class="ms-brand">ChenMLD233</div>
+      <div class="ms-brand">XXXppp233</div>
       <div class="ms-links">
         <router-link to="/" class="ms-link">Home</router-link>
         <router-link to="/notes" class="ms-link">Notes</router-link>
       </div>
-      <div class="ms-profile-icon">ME</div>
+      <!-- <div class="ms-profile-icon">ME</div> -->
     </div>
   </nav>
 </template>
@@ -61,7 +61,7 @@
   background-color: #005a9e;
 }
 
-.ms-profile-icon {
+/* .ms-profile-icon {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -72,5 +72,5 @@
   font-size: 12px;
   font-weight: bold;
   cursor: pointer;
-}
+} */
 </style>
