@@ -161,7 +161,7 @@ const readingTime = computed(() => {
 
 .docs-grid {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
+  grid-template-columns: 240px 1fr 240px;
   max-width: 1600px;
   margin: 0 auto;
   gap: 0;
@@ -169,7 +169,7 @@ const readingTime = computed(() => {
 
 @media (max-width: 1200px) {
   .docs-grid {
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: 240px 1fr;
   }
   .right-toc {
     display: none;

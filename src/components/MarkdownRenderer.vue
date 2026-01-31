@@ -16,9 +16,9 @@ const renderer = new marked.Renderer()
 const embedExtension = {
   name: 'embed',
   level: 'block',
-  start(src) { return src.match(/^:{3,}/)?.index; },
+  start(src) { return src.match(/:{3,}\s*embed/)?.index; },
   tokenizer(src) {
-    const rule = /^:{3,}\s*embed\s*(\n[\s\S]*?)\n:{3,}(?:\n+|$)/;
+    const rule = /^:{3,}\s*embed\s*([\s\S]*?)\n:{3,}/;
     const match = rule.exec(src);
     if (match) {
       return {
@@ -37,9 +37,9 @@ const embedExtension = {
 const alertExtension = {
   name: 'alert',
   level: 'block',
-  start(src) { return src.match(/^:{3,}/)?.index; },
+  start(src) { return src.match(/:{3,}\s*(note|important|warning|tip|alert)/i)?.index; },
   tokenizer(src) {
-    const rule = /^:{3,}\s*(note|important|warning|tip|alert)\s*(\n[\s\S]*?)\n:{3,}(?:\n+|$)/i;
+    const rule = /^:{3,}\s*(note|important|warning|tip|alert)\s*([\s\S]*?)\n:{3,}/i;
     const match = rule.exec(src);
     if (match) {
       return {
@@ -56,13 +56,14 @@ const alertExtension = {
       'tip': { title: 'Tip', icon: '💡' },
       'important': { title: 'Important', icon: '★' },
       'warning': { title: 'Warning', icon: '⚠' },
-      'alert': { title: 'Note', icon: 'ⓘ' } // Map alert to Note style in MS Learn
+      'alert': { title: 'Caution', icon: '✖' }
     };
     
     const config = variantMap[token.variant] || variantMap['note'];
+    // Use a clean marked instance for internal parsing to avoid recursion issues
     const content = marked.parse(token.text);
     
-    return `<div class="ms-alert alert-${token.variant === 'alert' ? 'note' : token.variant}">
+    return `<div class="ms-alert alert-${token.variant === 'alert' ? 'alert' : token.variant}">
       <p class="alert-title">
         <span class="alert-icon">${config.icon}</span>
         ${config.title}
@@ -96,6 +97,12 @@ renderer.code = function({ text, lang }) {
   return `<div class="code-container"><p class="code-lang">${lang || 'Text'}</p><pre><code class="language-${lang || ''}">${escaped}</code></pre></div>`;
 }
 
+// Global Marked Configuration
+marked.use({ 
+  renderer,
+  extensions: [embedExtension, alertExtension]
+})
+
 const htmlContent = computed(() => {
   // 1. Strip frontmatter first
   let content = (props.content || '').replace(/^---[\s\S]*?---\n/, '')
@@ -103,10 +110,6 @@ const htmlContent = computed(() => {
   // 2. Remove the first H1 tag to avoid double titles
   content = content.replace(/^#\s+.*(?:\n|$)/, '')
 
-  marked.use({ 
-    renderer,
-    extensions: [embedExtension, alertExtension]
-  })
   return marked(content)
 })
 </script>
@@ -206,6 +209,11 @@ const htmlContent = computed(() => {
 .alert-tip { 
   border-left-color: #107c10; 
   background-color: #f1faf1; 
+}
+.alert-alert { /* Microsoft Caution style */
+  border-left-color: #a4262c; 
+  background-color: #fde7e9; 
+  color: #a4262c;
 }
 
 .alert-content {
