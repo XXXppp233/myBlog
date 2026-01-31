@@ -1,5 +1,6 @@
 <script setup>
 import IpInfoCard from '../components/IpInfoCard.vue'
+import CloudflareVerification from '../components/CloudflareVerification.vue'
 </script>
 
 <template>
@@ -23,10 +24,16 @@ import IpInfoCard from '../components/IpInfoCard.vue'
       <div class="feature-card">
         <h3>Quick Start</h3>
         <p>Get up and running in seconds with our optimized templates and guides.</p>
+        <div class="quick-links">
+          <router-link to="/notes" class="link-arrow">Browse Notes &rarr;</router-link>
+        </div>
       </div>
       <div class="feature-card">
         <h3>Verification</h3>
         <p>Cloudflare believes you are human. Access granted with zero friction.</p>
+        <div class="verification-wrapper">
+          <CloudflareVerification />
+        </div>
       </div>
     </section>
   </div>
@@ -92,7 +99,7 @@ h1 {
 
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 24px;
   margin-top: 60px;
 }
@@ -103,6 +110,8 @@ h1 {
   border-radius: 8px;
   background: white;
   transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
 }
 
 .feature-card:hover {
@@ -114,6 +123,28 @@ h1 {
 h3 {
   margin-top: 0;
   color: #333;
+}
+
+.verification-wrapper {
+  margin-top: auto;
+  padding-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.quick-links {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.link-arrow {
+  color: #F38020;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link-arrow:hover {
+  text-decoration: underline;
 }
 
 /* Adjust IP Card styles within the grid */

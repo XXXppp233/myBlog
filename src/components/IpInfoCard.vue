@@ -78,9 +78,9 @@ const toggleVisibility = () => {
 </script>
 
 <template>
-  <div class="ms-card client-info-card">
+  <div class="cf-card-simple client-info-card">
     <div class="card-header">
-      <h3>Client Info</h3>
+      <h3 class="cf-text-label">Client Info</h3>
       <button @click="fetchIpData" class="refresh-btn" title="Refresh">↻</button>
     </div>
 
@@ -136,50 +136,47 @@ const toggleVisibility = () => {
 </template>
 
 <style scoped>
-/* Inherit card styles from global or parent usage, but define local overrides */
+/* Cloudflare-like minimal style */
 .client-info-card {
-  /* Ensure it matches the ms-card style if used independently */
-  background: white;
-  box-shadow:
-    0 1.6px 3.6px rgba(0, 0, 0, 0.13),
-    0 0.3px 0.9px rgba(0, 0, 0, 0.11);
-  border-radius: 4px;
-  padding: 20px;
-  transition: box-shadow 0.2s;
-}
-
-.client-info-card:hover {
-  box-shadow:
-    0 6.4px 14.4px rgba(0, 0, 0, 0.13),
-    0 1.2px 3.6px rgba(0, 0, 0, 0.11);
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
 }
 
-.card-header h3 {
-  font-size: 18px;
+.cf-text-label {
+  font-size: 14px;
   font-weight: 600;
+  color: #333;
   margin: 0;
-  color: #201f1e;
 }
 
 .refresh-btn {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  color: #0078d4;
+  font-size: 16px;
+  color: #F38020; /* Cloudflare Orange */
+  transition: transform 0.3s ease;
+}
+
+.refresh-btn:hover {
+  transform: rotate(180deg);
 }
 
 .info-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .info-row {
@@ -196,10 +193,9 @@ const toggleVisibility = () => {
 }
 
 .label {
-  font-size: 11px;
-  color: #605e5c;
-  font-weight: 600;
-  text-transform: uppercase;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
 }
 
 .flag-icon {
@@ -209,9 +205,18 @@ const toggleVisibility = () => {
 }
 
 .value {
-  font-size: 14px;
-  color: #323130;
-  font-family: 'Consolas', monospace; /* Monospace for IP looks better */
+  font-size: 15px;
+  color: #1a1a1a;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.ip-address {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  background-color: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
 }
 
 .value-container {
@@ -226,18 +231,20 @@ const toggleVisibility = () => {
   padding: 0;
   margin: 0;
   font-size: 12px;
-  opacity: 0.6;
+  opacity: 0.5;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #0078d4;
+  color: #F38020;
 }
 
 .icon-btn:hover {
   opacity: 1;
 }
 
-.ip-address {
-  font-weight: 600;
+.spinner, .error-msg {
+  font-size: 14px;
+  color: #666;
+  padding: 10px 0;
 }
 </style>
