@@ -24,4 +24,4 @@ deactivate
 
 git add .
 git commit -m "Automated update"
-git push origin change
+git push origin master 
