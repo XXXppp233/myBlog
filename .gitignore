@@ -1,0 +1,27 @@
+# Node.js
+node_modules/
+dist/
+npm-debug.log
+yarn-error.log
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Local Config
+
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE & Build
+.vscode/
+.vite/
+
+# Project Specific
+site/
+
+# vscode
+.vscode/
