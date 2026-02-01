@@ -10,32 +10,34 @@ export function useNotes() {
     isLoading.value = true
     try {
       // Using 'change' branch as the source of truth for blog.xml as established
-      const response = await fetch('https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/blog.xml')
+      const response = await fetch(
+        'https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/blog.xml',
+      )
       const text = await response.text()
       const parser = new DOMParser()
       const xmlDoc = parser.parseFromString(text, 'text/xml')
       const noteNodes = xmlDoc.getElementsByTagName('note')
 
-      const fetchedNotes = Array.from(noteNodes).map(node => {
+      const fetchedNotes = Array.from(noteNodes).map((node) => {
         const path = node.querySelector('path')?.textContent || ''
         const title = node.querySelector('title')?.textContent || ''
         const category = node.querySelector('category')?.textContent || ''
         const mtime = node.querySelector('mtime')?.textContent || ''
         const url = node.querySelector('url')?.textContent || ''
-        
+
         // Slug generation: strip .md extension from path
         // e.g. "git/collaborate.md" -> "git/collaborate"
         const slug = path.replace(/\.md$/i, '')
-        
+
         return {
           id: slug, // Map slug to id for compatibility
           slug,
           title,
           category,
-          date: mtime ? new Date(mtime).toISOString().split('T')[0] : '', // Format date for Azure view
+          date: mtime ? new Date(parseFloat(mtime) * 1000).toISOString().split('T')[0] : '', // Convert Unix timestamp to YYYY-MM-DD
           url,
           path,
-          content: null // loaded lazily
+          content: null, // loaded lazily
         }
       })
       notes.value = fetchedNotes
@@ -54,12 +56,12 @@ export function useNotes() {
 
   const getNoteBySlug = (slug) => {
     // Azure view called it getNoteById, passing slug now
-    return notes.value.find(n => n.slug === slug)
+    return notes.value.find((n) => n.slug === slug)
   }
 
   const getNotesByCategory = (category) => {
-     if (!category) return notes.value
-     return notes.value.filter(n => n.category === category)
+    if (!category) return notes.value
+    return notes.value.filter((n) => n.category === category)
   }
 
   const fetchNoteContent = async (note) => {
@@ -75,7 +77,7 @@ export function useNotes() {
   }
 
   const categories = computed(() => {
-    const cats = new Set(notes.value.map(n => n.category).filter(c => c))
+    const cats = new Set(notes.value.map((n) => n.category).filter((c) => c))
     return Array.from(cats).sort()
   })
 
@@ -87,6 +89,6 @@ export function useNotes() {
     getNoteById: getNoteBySlug,
     getNotesByCategory,
     fetchNoteContent,
-    isLoading
+    isLoading,
   }
 }
