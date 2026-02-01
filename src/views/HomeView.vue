@@ -51,7 +51,7 @@ onMounted(() => {
   <div class="home-container">
     <div class="welcome-banner">
       <h1>Good morning, Sir</h1>
-      <p>Cloud, Compute and Artificial intelligence.</p>
+      <p>AI, Cloud, Productivity, Computing, Gaming & Apps.</p>
     </div>
 
     <div class="metro-grid">
