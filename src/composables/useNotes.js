@@ -34,11 +34,9 @@ export function useNotes() {
           slug,
           title,
           category,
-          date: mtime 
-            ? (mtime.includes('-') 
-                ? new Date(mtime).toISOString().split('T')[0]  // Legacy format: YYYY-MM-DD
-                : new Date(parseFloat(mtime) * 1000).toISOString().split('T')[0]) // Unix timestamp
-            : '',
+          date: mtime
+            ? new Date(parseFloat(mtime) * 1000).toISOString().split("T")[0]
+            : "", // Convert Unix timestamp to YYYY-MM-DD
           url,
           path,
           content: null, // loaded lazily
