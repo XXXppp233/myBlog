@@ -1,5 +1,5 @@
 responsitory: github
 type: ssh
 url: git@github.com:XXXppp233/myBlog.git
-branch: change
-contenturl: https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/
+branch: master
+contenturl: https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/

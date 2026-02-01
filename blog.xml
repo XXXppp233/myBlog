@@ -4,63 +4,63 @@
     <title>README</title>
     <mtime>1769953306.9975636</mtime>
     <path>README.MD</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/README.MD</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/README.MD</url>
     <category/>
   </note>
   <note>
     <title>Cloudflare Pages</title>
     <mtime>1769953306.9975636</mtime>
     <path>deploy/Cloudflare Pages.md</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/deploy/Cloudflare Pages.md</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/deploy/Cloudflare Pages.md</url>
     <category>deploy</category>
   </note>
   <note>
     <title>app-service</title>
     <mtime>1769953306.9978032</mtime>
     <path>deploy/app-service.md</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/deploy/app-service.md</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/deploy/app-service.md</url>
     <category>deploy</category>
   </note>
   <note>
     <title>collaborate</title>
     <mtime>1769953306.9978032</mtime>
     <path>git/collaborate.md</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/git/collaborate.md</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/git/collaborate.md</url>
     <category>git</category>
   </note>
   <note>
     <title>examine-history-state</title>
     <mtime>1769953306.9978378</mtime>
     <path>git/examine-history-state.md</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/git/examine-history-state.md</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/git/examine-history-state.md</url>
     <category>git</category>
   </note>
   <note>
     <title>git-overview</title>
     <mtime>1769953306.9978378</mtime>
     <path>git/git-overview.md</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/git/git-overview.md</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/git/git-overview.md</url>
     <category>git</category>
   </note>
   <note>
     <title>grow-mark-tweak-history</title>
     <mtime>1769953306.9978378</mtime>
     <path>git/grow-mark-tweak-history.md</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/git/grow-mark-tweak-history.md</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/git/grow-mark-tweak-history.md</url>
     <category>git</category>
   </note>
   <note>
     <title>work-on-current-change</title>
     <mtime>1769953306.9978378</mtime>
     <path>git/work-on-current-change.md</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/git/work-on-current-change.md</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/git/work-on-current-change.md</url>
     <category>git</category>
   </note>
   <note>
     <title>reactivity</title>
     <mtime>1769953306.9978378</mtime>
     <path>vue/reactivity.md</path>
-    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/vue/reactivity.md</url>
+    <url>https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/vue/reactivity.md</url>
     <category>vue</category>
   </note>
 </blog>
