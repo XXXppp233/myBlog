@@ -11,7 +11,7 @@ export function useNotes() {
     try {
       // Using 'change' branch as the source of truth for blog.xml as established
       const response = await fetch(
-        "https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/change/blog.xml",
+        "https://raw.githubusercontent.com/XXXppp233/myBlog/refs/heads/master/blog.xml",
       );
       const text = await response.text();
       const parser = new DOMParser();
